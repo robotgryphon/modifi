@@ -54,18 +54,23 @@
     <Compile Include="CurseForge\CurseForge.cs" />
     <Compile Include="CurseForge\CurseForgeMod.cs" />
     <Compile Include="CurseForge\CurseForgeModInfo.cs" />
-    <Compile Include="ModDownloadException.cs" />
-    <Compile Include="Mod.cs" />
+    <Compile Include="Mods\IMod.cs" />
+    <Compile Include="Mods\Mod.cs" />
+    <Compile Include="Mods\HostedMod.cs" />
+    <Compile Include="Mods\ModDownloadException.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="LockFile.cs" />
+    <Compile Include="Storage\LockFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Storage\Domain.cs" />
+    <Compile Include="Storage\Pack.cs" />
+    <Compile Include="Storage\Version.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="lock.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <None Include=".modifi\pack.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

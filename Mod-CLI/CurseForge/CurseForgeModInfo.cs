@@ -5,18 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.ModCLI.CurseForge {
-    public class CurseForgeModInfo {
-        public int ID { get; set; }
-        public String Title { get; set; }
-        public Dictionary<String, List<ModVersion>> Versions { get; set; }
-        public ModVersion Download { get; set; }
+    public struct CurseForgeModInfo {
+        public int ID;
+        public String Title;
+        public Dictionary<String, List<ModVersion>> Versions;
+        public ModVersion Download;
 
-        public class ModVersion {
-            public int ID { get; set; }
-            public String URL { get; set; }
-            public String Name { get; set; }
-            public String Type { get; set; }
-            public String Version { get; set; }
+        public struct ModVersion {
+            public int ID;
+            public String URL;
+            public String Name;
+            public String Type;
+            public String Version;
         }
     }
 }

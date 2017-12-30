@@ -7,6 +7,8 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using RobotGryphon.ModCLI.Mods;
+
 /**
  * Some code is adapted from Vazkii's Curseforge Modpack Downloader
  * See https://github.com/Vazkii/CMPDL for more information.
@@ -14,22 +16,22 @@ using System.Threading.Tasks;
 namespace RobotGryphon.ModCLI.CurseForge {
 
     public class CurseForgeMod : Mod {
-        public string ProjectName { get; set; }
+
+        /// <summary>
+        /// The curseforge id of the mod (ie: jei)
+        /// </summary>
         public string ProjectId { get; set; }
-        public string Filename { get; set; }
-        public string Version { get; set; }
-        public string Checksum { get; set; }
 
         protected Regex FILENAME_MATCH = new Regex(@".*?/([^/]*)$");
 
         public CurseForgeModInfo ModInfo;
 
         public override ModStatus GetDownloadStatus() {
-            string FilePath = Path.Combine(Settings.ModPath, Filename ?? "-");
-            if (File.Exists(FilePath)) {
+            string FilePathLocal = Path.Combine(Settings.ModPath, Filename ?? "-");
+            if (File.Exists(FilePathLocal)) {
                 // Perform checksum match and skip download if match
                 using (var md5 = MD5.Create()) {
-                    byte[] hash = md5.ComputeHash(File.OpenRead(FilePath));
+                    byte[] hash = md5.ComputeHash(File.OpenRead(FilePathLocal));
                     String s = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                     if (s.Equals(Checksum)) {
                         return ModStatus.DOWNLOADED;
@@ -42,15 +44,15 @@ namespace RobotGryphon.ModCLI.CurseForge {
 
         public async Task<CurseForgeModInfo> GetModInfo() {
 
-            if(this.ModInfo != null) {
+            if(ModInfo.ID != 0) {
                 return this.ModInfo;
             }
 
             Uri api;
             if (!String.IsNullOrEmpty(this.Version))
-                api = new Uri(String.Format("{0}/{1}?version={2}", CurseForge.ApiURL, this.ProjectName, this.Version));
+                api = new Uri(String.Format("{0}/{1}?version={2}", CurseForge.ApiURL, this.ProjectId, this.Version));
             else
-                api = new Uri(String.Format("{0}/{1}", CurseForge.ApiURL, this.ProjectName));
+                api = new Uri(String.Format("{0}/{1}", CurseForge.ApiURL, this.ProjectId));
 
             try {
                 HttpWebRequest req = (HttpWebRequest) WebRequest.Create(api);
@@ -71,7 +73,7 @@ namespace RobotGryphon.ModCLI.CurseForge {
             }
 
             catch (System.Net.WebException) {
-                throw new ModDownloadException(ModDownloadResult.ERROR_CONNECTION);
+                throw new RobotGryphon.ModCLI.Mods.ModDownloadException(ModDownloadResult.ERROR_CONNECTION);
             }
 
             return this.ModInfo;
