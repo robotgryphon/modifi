@@ -18,7 +18,7 @@ namespace RobotGryphon.ModCLI {
 
             public Boolean Hosted = true;
 
-            public Func<Mod, int, Uri> ModDownloadGenerator;
+            public Func<ModMetadata, int, Uri> ModDownloadGenerator;
 
             public Domain(String key) {
                 this.Name = key;
@@ -27,7 +27,7 @@ namespace RobotGryphon.ModCLI {
                 this.ModDownloadGenerator = this.DefaultDownloadPath;
             }
 
-            public Uri DefaultDownloadPath(Mod m, int server = 0) {
+            public Uri DefaultDownloadPath(ModMetadata m, int server = 0) {
                 return new Uri(this.Servers[server], m.Filename);
             }
         }
@@ -44,12 +44,12 @@ namespace RobotGryphon.ModCLI {
         public Dictionary<string, Domain> PackDomains;
         public Dictionary<string, Domain> ModDomains;
 
-        public List<Mod> Mods { get; protected set; }
+        public List<ModMetadata> Mods { get; protected set; }
 
         public LockFile() {
             this.PackDomains = new Dictionary<string, Domain>();
             this.ModDomains = new Dictionary<string, Domain>();
-            this.Mods = new List<Mod>();
+            this.Mods = new List<ModMetadata>();
 
             Domain curseforge = new Domain("curseforge");
             curseforge.ModDownloadGenerator = (m, i) => {

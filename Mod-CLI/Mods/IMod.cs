@@ -13,5 +13,7 @@ namespace RobotGryphon.ModCLI.Mods {
         /// </summary>
         /// <returns>Status on how the download went.</returns>
         Task<ModDownloadResult> Download();
+
+        ModMetadata GetMetadata();
     }
 }

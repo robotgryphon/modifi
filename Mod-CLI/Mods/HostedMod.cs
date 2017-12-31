@@ -5,13 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.ModCLI.Mods {
-    public class HostedMod : Mod {
-        public override Task<ModDownloadResult> Download() {
+    public class HostedMod : IMod {
+
+        public ModMetadata Metadata;
+
+        public Task<ModDownloadResult> Download() {
             throw new NotImplementedException();
         }
 
-        public override ModStatus GetDownloadStatus() {
+        public ModStatus GetDownloadStatus() {
             throw new NotImplementedException();
+        }
+
+        public ModMetadata GetMetadata() {
+            return this.Metadata;
         }
     }
 }

@@ -16,6 +16,6 @@ namespace RobotGryphon.ModCLI.Storage {
         /// A dictionary of requested mods.
         /// The key is an md5hash of format @domain::modid.
         /// </summary>
-        public Dictionary<String, Mod> Mods { get; set; }
+        public Dictionary<String, ModMetadata> Mods { get; set; }
     }
 }

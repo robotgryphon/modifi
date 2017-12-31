@@ -7,16 +7,9 @@ using System.Threading.Tasks;
 namespace RobotGryphon.ModCLI.CurseForge {
     public struct CurseForgeModInfo {
         public int ID;
-        public String Title;
-        public Dictionary<String, List<ModVersion>> Versions;
-        public ModVersion Download;
-
-        public struct ModVersion {
-            public int ID;
-            public String URL;
-            public String Name;
-            public String Type;
-            public String Version;
-        }
+        public string Title;
+        public string Description;
+        public Dictionary<String, List<Mods.ModMetadata>> Versions;
+        public Mods.ModMetadata Download;
     }
 }

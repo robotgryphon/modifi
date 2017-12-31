@@ -15,7 +15,7 @@ using RobotGryphon.ModCLI.Mods;
  */
 namespace RobotGryphon.ModCLI.CurseForge {
 
-    public class CurseForgeMod : Mod {
+    public class CurseForgeMod : IMod {
 
         /// <summary>
         /// The curseforge id of the mod (ie: jei)
@@ -24,16 +24,19 @@ namespace RobotGryphon.ModCLI.CurseForge {
 
         protected Regex FILENAME_MATCH = new Regex(@".*?/([^/]*)$");
 
+        public ModMetadata Metadata;
         public CurseForgeModInfo ModInfo;
 
-        public override ModStatus GetDownloadStatus() {
-            string FilePathLocal = Path.Combine(Settings.ModPath, Filename ?? "-");
+        public CurseForgeMod() { }
+
+        public ModStatus GetDownloadStatus() {
+            string FilePathLocal = Path.Combine(Settings.ModPath, Metadata.Filename ?? "-");
             if (File.Exists(FilePathLocal)) {
                 // Perform checksum match and skip download if match
                 using (var md5 = MD5.Create()) {
                     byte[] hash = md5.ComputeHash(File.OpenRead(FilePathLocal));
                     String s = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-                    if (s.Equals(Checksum)) {
+                    if (s.Equals(Metadata.Checksum)) {
                         return ModStatus.DOWNLOADED;
                     }
                 }
@@ -42,49 +45,35 @@ namespace RobotGryphon.ModCLI.CurseForge {
             return ModStatus.NOT_DOWNLOADED;
         }
 
+        /// <summary>
+        /// Quick wrapper around the helper class.
+        /// Returns the stored mod information if it has it.
+        /// </summary>
+        /// <returns></returns>
         public async Task<CurseForgeModInfo> GetModInfo() {
+            if (String.IsNullOrEmpty(this.ModInfo.Title)) {
+                this.ModInfo = await CurseForgeHelper.GetModInfo(new ModVersion() {
+                    ModId = Metadata.ModId,
+                    Version = Metadata.Version
+                });
 
-            if(ModInfo.ID != 0) {
-                return this.ModInfo;
-            }
-
-            Uri api;
-            if (!String.IsNullOrEmpty(this.Version))
-                api = new Uri(String.Format("{0}/{1}?version={2}", CurseForge.ApiURL, this.ProjectId, this.Version));
-            else
-                api = new Uri(String.Format("{0}/{1}", CurseForge.ApiURL, this.ProjectId));
-
-            try {
-                HttpWebRequest req = (HttpWebRequest) WebRequest.Create(api);
-                req.UserAgent = CurseForge.UserAgent;
-
-                WebResponse resp = await req.GetResponseAsync();
-
-
-                Stream response = resp.GetResponseStream();
-                StreamReader reader = new StreamReader(response);
-                String modData = await reader.ReadToEndAsync();
-
-                this.ModInfo = JsonConvert.DeserializeObject<CurseForgeModInfo>(modData);
-
-                resp.Close();
-                response.Close();
-                reader.Close();
-            }
-
-            catch (System.Net.WebException) {
-                throw new RobotGryphon.ModCLI.Mods.ModDownloadException(ModDownloadResult.ERROR_CONNECTION);
+                this.Metadata = this.ModInfo.Download;
             }
 
             return this.ModInfo;
         }
 
-        public override async Task<ModDownloadResult> Download() {
+
+        /// <summary>
+        /// Download the mod using information found in Metadata.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ModDownloadResult> Download() {
             await GetModInfo();
             if (!Directory.Exists(Settings.ModPath)) Directory.CreateDirectory(Settings.ModPath);
 
             try {
-                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(ModInfo.Download.URL + "/file"));
+                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(Metadata.DownloadURL + "/file"));
                 using (WebResponse r = await webRequest.GetResponseAsync()) {
                     Uri downloadUri = r.ResponseUri;
 
@@ -92,12 +81,12 @@ namespace RobotGryphon.ModCLI.CurseForge {
                         return ModDownloadResult.ERROR_INVALID_FILENAME;
 
                     Match m = FILENAME_MATCH.Match(downloadUri.AbsoluteUri);
-                    String filename = m.Groups[1].Value;
+                    this.Metadata.Filename = m.Groups[1].Value;
 
-                    if (filename.ToLowerInvariant() == "download")
+                    if (Metadata.Filename.ToLowerInvariant() == "download")
                         return ModDownloadResult.ERROR_INVALID_FILENAME;
 
-                    FileStream fs = File.OpenWrite(Path.Combine(Settings.ModPath, filename));
+                    FileStream fs = File.OpenWrite(Path.Combine(Settings.ModPath, Metadata.Filename));
                     byte[] buffer = new byte[1024];
                     using (Stream s = r.GetResponseStream()) {
                         int size = s.Read(buffer, 0, buffer.Length);
@@ -117,6 +106,10 @@ namespace RobotGryphon.ModCLI.CurseForge {
             catch(Exception) {
                 return ModDownloadResult.ERROR_DOWNLOAD_FAILED;
             }
+        }
+
+        public ModMetadata GetMetadata() {
+            return this.Metadata;
         }
     }
 }

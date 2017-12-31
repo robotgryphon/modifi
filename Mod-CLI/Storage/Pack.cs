@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 
 namespace RobotGryphon.ModCLI.Storage {
     public struct Pack {
-        public String Name;
+
+        public string Name;
 
         /// <summary>
         /// The currently-installed version.
         /// </summary>
-        public String Installed;
+        public string Installed;
 
         public Dictionary<String, Domain> Domains;
+
+        public string MinecraftVersion;
     }
 }

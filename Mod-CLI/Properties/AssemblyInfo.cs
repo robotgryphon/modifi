@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Minecraft Mods CLI")]
+[assembly: AssemblyTitle("Modifi")]
 [assembly: AssemblyDescription("A small command-line program to manage Minecraft mod installation.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("mc-mods")]
-[assembly: AssemblyCopyright("Copyright © Ted Senft 2017")]
+[assembly: AssemblyProduct("modifi")]
+[assembly: AssemblyCopyright("Copyright © 2017 RobotGryphon")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

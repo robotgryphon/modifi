@@ -5,32 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.ModCLI.Mods {
-    public enum ModStatus {
-        NOT_DOWNLOADED,
-        DOWNLOADED,
-        IN_PROGRESS,
-        NOT_FOUND
-    }
+    public struct ModMetadata {
 
-    public enum ModDownloadResult {
-        SUCCESS,
-        ERROR_NOT_FOUND,
-        ERROR_CONNECTION,
-        ERROR_INVALID_FILENAME,
-        ERROR_DOWNLOAD_FAILED
-    }
-
-    public class Mod : IMod {
-        
         /// <summary>
         /// Name of the mod. Actually used for display.
         /// </summary>
-        public String Name { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// A unique ID for this file. May be generated.
         /// </summary>
-        public String Version { get; set; }
+        public string Version { get; set; }
+
+        /// <summary>
+        /// A list of supported versions.
+        /// </summary>
+        public string[] Versions { get; set; }
 
         /// <summary>
         /// A path to the file on its server.
@@ -47,14 +37,22 @@ namespace RobotGryphon.ModCLI.Mods {
         /// </summary>
         public string ModId { get; set; }
 
+        /// <summary>
+        /// An MD5 hash of the file. Used for verifying the mod downloaded correctly.
+        /// </summary>
         public string Checksum { get; set; }
 
-        public virtual Task<ModDownloadResult> Download() {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// The type of release the mod is.
+        /// </summary>
+        public string Type { get; set; }
 
-        public virtual ModStatus GetDownloadStatus() {
-            throw new NotImplementedException();
-        }
+        [Newtonsoft.Json.JsonProperty("url")]
+        public string DownloadURL { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("id")]
+        public string FileId { get; set; }
+
+        public string Description;
     }
 }
