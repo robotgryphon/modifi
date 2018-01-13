@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.ModCLI.Mods {
+namespace RobotGryphon.Modifi.Mods {
     public class ModDownloadException : Exception {
         private ModDownloadResult errorType;
 

@@ -1,4 +1,4 @@
-﻿namespace RobotGryphon.ModCLI.Mods {
+﻿namespace RobotGryphon.Modifi.Mods {
     public enum ModDownloadResult {
         SUCCESS,
         ERROR_NOT_FOUND,

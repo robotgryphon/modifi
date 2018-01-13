@@ -1,4 +1,4 @@
-﻿namespace RobotGryphon.ModCLI.Mods {
+﻿namespace RobotGryphon.Modifi.Mods {
     public enum ModStatus {
         NOT_DOWNLOADED,
         DOWNLOADED,

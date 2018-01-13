@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.ModCLI.Mods {
+namespace RobotGryphon.Modifi.Mods {
     public interface IMod {
-        ModStatus GetDownloadStatus();
 
         /// <summary>
         /// Makes an attempt to fetch the mod from its repository.
@@ -14,6 +13,7 @@ namespace RobotGryphon.ModCLI.Mods {
         /// <returns>Status on how the download went.</returns>
         Task<ModDownloadResult> Download();
 
-        ModMetadata GetMetadata();
+        IModMetadata GetMetadata();
+        string GetName();
     }
 }
