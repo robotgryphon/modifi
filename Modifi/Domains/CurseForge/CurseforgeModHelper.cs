@@ -11,7 +11,7 @@ using RobotGryphon.Modifi.Mods;
 
 namespace RobotGryphon.Modifi.Domains.CurseForge {
 
-    public class CurseForgeMod : IMod {
+    public class CurseforgeModHelper : ModHelper {
 
         /// <summary>
         /// The curseforge id of the mod (ie: jei)
@@ -20,24 +20,27 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         protected Regex FILENAME_MATCH = new Regex(@".*?/([^/]*)$");
 
-        public CurseforgeModMetadata Metadata;
-
-        public CurseForgeMod() { }
+        public CurseforgeModHelper() { }
 
 
         /// <summary>
         /// Download the mod using information found in Metadata.
         /// </summary>
         /// <returns></returns>
-        public async Task<ModDownloadResult> Download() {
+        public override async Task<ModDownloadResult> DownloadMod(IModMetadata meta) {
 
-            if (this.Metadata.RequestedVersion.FileId == null)
+            if(!(meta is CurseforgeModMetadata)) {
+                throw new Exception("Meta passed to Curseforge helper was not a Curseforge mod metadata object.");
+            }
+
+            CurseforgeModMetadata meta2 = (CurseforgeModMetadata) meta;
+            if (meta2.RequestedVersion.FileId == null)
                 throw new Exception("Error during download: Mod metadata has not been fetched from Curseforge yet.");
 
             if (!Directory.Exists(Settings.ModPath)) Directory.CreateDirectory(Settings.ModPath);
 
             try {
-                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(Metadata.RequestedVersion.DownloadURL + "/file"));
+                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(meta2.RequestedVersion.DownloadURL + "/file"));
                 using (WebResponse r = await webRequest.GetResponseAsync()) {
                     Uri downloadUri = r.ResponseUri;
 
@@ -70,14 +73,6 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             catch(Exception) {
                 return ModDownloadResult.ERROR_DOWNLOAD_FAILED;
             }
-        }
-
-        public IModMetadata GetMetadata() {
-            return Metadata;
-        }
-
-        public string GetName() {
-            return this.Metadata.Title ?? "Unknown Curseforge Mod";
         }
     }
 }

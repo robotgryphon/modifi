@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi {
-    public class ModHelper {
+    public abstract class ModHelper {
 
         public static ModVersion SplitDomainAndID(string modid) {
 
@@ -27,7 +27,7 @@ namespace RobotGryphon.Modifi {
         /// Prints out some mod information in a standardized manner.
         /// </summary>
         /// <param name="meta"></param>
-        public static void PrintModInformation(IModMetadata meta) {
+        public void PrintModInformation(IModMetadata meta) {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
             Console.Write(meta.GetName());
@@ -39,7 +39,7 @@ namespace RobotGryphon.Modifi {
             Console.WriteLine(")");
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Domains.DomainHandler domainHandler = Modifi.GetDomainHandler(meta.GetDomain());
+            Domains.IDomainHandler domainHandler = Modifi.GetDomainHandler(meta.GetDomain());
             Console.WriteLine(domainHandler.GetProjectURL(meta));
 
             if (meta.HasDescription()) {
@@ -52,5 +52,7 @@ namespace RobotGryphon.Modifi {
             Console.WriteLine("".PadLeft(Console.BufferWidth - 10, '='));
             Console.ResetColor();
         }
+
+        public abstract Task<ModDownloadResult> DownloadMod(IModMetadata meta);
     }
 }

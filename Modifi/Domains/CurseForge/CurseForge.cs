@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using static RobotGryphon.Modifi.Modifi;
 
 namespace RobotGryphon.Modifi.Domains.CurseForge {
-    public class CurseForge : DomainHandler {
+    public class CurseForge : IDomainHandler {
         public const string UserAgent = "Mozilla/5.0 (X11; Linux x86_64)";
 
         public static Uri BaseUri { get; internal set; }
@@ -20,6 +20,12 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         public const string ApiURL = "https://api.cfwidget.com/mc-mods/minecraft";
 
         public static CurseForge INSTANCE = new CurseForge();
+
+        protected CurseforgeModHelper ModHelper;
+
+        private CurseForge() {
+            ModHelper = new CurseforgeModHelper();
+        }
 
         public static async Task<CurseforgeModMetadata> GetModInfo(ModVersion version) {
 
@@ -62,53 +68,57 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// <returns>Mod metadata. (Curseforge version)</returns>
         public static async Task<IModMetadata> GetModMetadata(ModVersion version) => await GetModInfo(version);
 
-        public void HandleModAction(ModActions action, ModVersion mod) {
-            switch (action) {
-                case ModActions.INFO:
-                    DoModInformationAction(mod);
-                    break;
+        public string GetProjectURL(IModMetadata meta) {
+            if (!(meta is CurseforgeModMetadata)) throw new Exception("Expected curseforge mod, got invalid.");
+            return ((CurseforgeModMetadata)meta).URLs.Project;
+        }
 
-                case ModActions.VERSIONS:
-                    Task<CurseforgeModMetadata> metaTask = GetModInfo(mod);
-                    CurseforgeModMetadata meta = metaTask.Result;
-                    string mcVersion = Modifi.GetMinecraftVersion();
+        public void HandleModVersions(ModVersion mod) {
+            Task<CurseforgeModMetadata> metaTask = GetModInfo(mod);
+            CurseforgeModMetadata meta = metaTask.Result;
+            string mcVersion = Modifi.GetMinecraftVersion();
 
-                    if(!meta.Versions.ContainsKey(mcVersion)) {
-                        Console.Error.WriteLine("Error: Mod not supported for Minecraft version {0}.", mcVersion);
-                        return;
-                    }
+            if (!meta.Versions.ContainsKey(mcVersion)) {
+                Console.Error.WriteLine("Error: Mod not supported for Minecraft version {0}.", mcVersion);
+                return;
+            }
 
-                    IEnumerable<CurseforgeModVersion> versions = meta.Versions[mcVersion];
+            IEnumerable<CurseforgeModVersion> versions = meta.Versions[mcVersion];
 
-                    // TODO: Configurable number of results shown?
-                    IEnumerable<CurseforgeModVersion> limitedList = versions.Take(5);
+            // TODO: Configurable number of results shown?
+            IEnumerable<CurseforgeModVersion> limitedList = versions.Take(5);
 
-                    ModHelper.PrintModInformation(meta);
-                    foreach(CurseforgeModVersion version in limitedList) {
-                        Console.Write("[");
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        Console.Write(version.FileId);
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write("] ");
+            ModHelper.PrintModInformation(meta);
+            foreach (CurseforgeModVersion version in limitedList) {
+                Console.Write("[");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(version.FileId);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] ");
 
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write(version.Name);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(version.Name);
 
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write(" (");
-                        Console.ForegroundColor = ConsoleColor.Magenta;
-                        Console.Write(version.Type);
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write(")");
-                        Console.ResetColor();
-                        Console.WriteLine();
-                    }
-
-                    break;
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(" (");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write(version.Type);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(")");
+                Console.ResetColor();
+                Console.WriteLine();
             }
         }
 
-        private static void DoModInformationAction(ModVersion mod) {
+        public void HandleModAdd(ModVersion mod) {
+            throw new NotImplementedException();
+        }
+
+        public void HandleModRemove(ModVersion mod) {
+            throw new NotImplementedException();
+        }
+
+        public void HandleModInformation(ModVersion mod) {
             Task<CurseforgeModMetadata> meta = GetModInfo(mod);
             CurseforgeModMetadata metaData = meta.Result;
 
@@ -121,9 +131,12 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             Console.WriteLine("File ID: {0}", metaData.RequestedVersion.FileId);
         }
 
-        public string GetProjectURL(IModMetadata meta) {
-            if (!(meta is CurseforgeModMetadata)) throw new Exception("Expected curseforge mod, got invalid.");
-            return ((CurseforgeModMetadata) meta).URLs.Project;
+        public ModDownloadResult HandleModDownload(ModVersion modVersion) {
+            Task<CurseforgeModMetadata> meta = CurseForge.GetModInfo(modVersion);
+            CurseforgeModMetadata meta2 = meta.Result;
+
+            Task<ModDownloadResult> result = ModHelper.DownloadMod(meta2);
+            return result.Result;
         }
     }
 }

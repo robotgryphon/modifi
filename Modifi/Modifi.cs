@@ -32,7 +32,7 @@ namespace RobotGryphon.Modifi {
         /// </summary>
         public Storage.Version version;
 
-        public Dictionary<string, DomainHandler> DomainHandlers;
+        public Dictionary<string, IDomainHandler> DomainHandlers;
 
         private static Modifi _INSTANCE;
         public static Modifi INSTANCE {
@@ -53,7 +53,7 @@ namespace RobotGryphon.Modifi {
             PackLoaded = false;
 
             // Instantiate the domain handlers, make sure the built-in curseforge handler is added
-            DomainHandlers = new Dictionary<string, DomainHandler> {
+            DomainHandlers = new Dictionary<string, IDomainHandler> {
                 { "curseforge", Domains.CurseForge.CurseForge.INSTANCE }
             };
         }
@@ -64,7 +64,7 @@ namespace RobotGryphon.Modifi {
         /// </summary>
         /// <param name="v">The domain handler to fetch.</param>
         /// <returns></returns>
-        internal static DomainHandler GetDomainHandler(string v) {
+        internal static IDomainHandler GetDomainHandler(string v) {
             if (!INSTANCE.PackLoaded) LoadPack();
 
             if (INSTANCE.DomainHandlers.ContainsKey(v.ToLower()))
@@ -170,7 +170,7 @@ namespace RobotGryphon.Modifi {
                     throw new NotImplementedException("Custom domains are not yet supported.");
                 }
 
-                DomainHandler handler = INSTANCE.DomainHandlers[modVersion.Domain.ToLower()];
+                IDomainHandler handler = INSTANCE.DomainHandlers[modVersion.Domain.ToLower()];
                 switch (action) {
 
                     case ModActions.INVALID:
@@ -178,9 +178,28 @@ namespace RobotGryphon.Modifi {
                         Console.Error.WriteLine("Invalid mod action, choose from: {0}", String.Join(", ", actions));
                         break;
 
-                    default:
-                        handler.HandleModAction(action, modVersion);
+                    case ModActions.ADD:
+                        handler.HandleModAdd(modVersion);
                         break;
+
+                    case ModActions.REMOVE:
+                        handler.HandleModRemove(modVersion);
+                        break;
+
+                    case ModActions.INFO:
+                        handler.HandleModInformation(modVersion);
+                        break;
+
+                    case ModActions.VERSIONS:
+                        handler.HandleModVersions(modVersion);
+                        break;
+
+                    case ModActions.DOWNLOAD:
+                        handler.HandleModDownload(modVersion);
+                        break;
+
+                    default:
+                        throw new Exception("Invalid mod action.");
                 }
             }
         }

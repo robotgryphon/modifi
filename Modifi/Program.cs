@@ -22,7 +22,7 @@ namespace RobotGryphon.Modifi {
             string[] input = args;
             
             #if DEBUG
-            input = new string[] { "mods", "versions", "curseforge:jei" };
+            input = new string[] { "mods", "download", "curseforge:jei" };
             #endif
 
             if(input.Length < 1) {
@@ -34,8 +34,9 @@ namespace RobotGryphon.Modifi {
                 Modifi.ExecuteArguments(input);
             }
 
-            catch(NotImplementedException) {
-                Console.Error.WriteLine("Not yet implemented, sorry. Please keep an eye out for future updates!");
+            catch(NotImplementedException e) {
+                Console.Error.WriteLine("There was an error with your request.");
+                Console.Error.WriteLine(e.Message);
             }
         }
     }

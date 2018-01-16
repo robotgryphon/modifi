@@ -1,5 +1,6 @@
 .modifi
-
 bin/
 obj/
 .vs/
+Run/
+/Modifi/Properties/launchSettings.json
