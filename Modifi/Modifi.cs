@@ -30,11 +30,12 @@ namespace RobotGryphon.Modifi {
         /// <summary>
         /// The current version of the pack.
         /// </summary>
-        public Storage.Version version;
+        public LiteDB.LiteDatabase VersionDatabase;
 
         public Dictionary<string, IDomainHandler> DomainHandlers;
 
         private static Modifi _INSTANCE;
+
         public static Modifi INSTANCE {
             get {
                 if (_INSTANCE != null) return _INSTANCE;
@@ -74,33 +75,6 @@ namespace RobotGryphon.Modifi {
         }
 
         /// <summary>
-        /// Assures that there's a lock file for both the pack and the pack's specified version.
-        /// If a file does not exist, it asks to create it.
-        /// </summary>
-        public static async void AssureLockFiles() {
-
-            JsonSerializer s = JsonSerializer.Create(Settings.JsonSerializer);
-
-            // If the modifi directory wasn't found, or the pack file does not exist, generate it
-            if (!Directory.Exists(Settings.ModifiDirectory) || !File.Exists(Settings.PackFile)) {
-                INSTANCE.Pack = await PackHelper.GeneratePackFile();
-            } else {
-                LoadPack();
-            }
-
-            // Generate new version file if not found
-            String versionFile = Path.Combine(Settings.ModifiDirectory, INSTANCE.Pack.Installed + ".json");
-            if (!File.Exists(versionFile)) {
-                INSTANCE.version = await VersionHelper.GenerateVersionFile(INSTANCE.Pack.Installed);
-            } else {
-                // Deserialize requested version file.
-                StreamReader vr = new StreamReader(File.OpenRead(versionFile));
-                INSTANCE.version = s.Deserialize<Storage.Version>(new JsonTextReader(vr));
-                vr.Close();                
-            }
-        }
-
-        /// <summary>
         /// Wrapper to quickly check the pack and get the pack's requested Minecraft version.
         /// </summary>
         /// <returns></returns>
@@ -126,6 +100,23 @@ namespace RobotGryphon.Modifi {
             sr.Close();
         }
 
+        public static LiteDB.LiteDatabase FetchCurrentVersion() {
+            return INSTANCE.VersionDatabase;
+        }
+
+        public static void LoadVersion(string version = "1.0.0") {
+            string path = Path.Combine(Settings.ModifiDirectory, version + ".db");
+
+            UnloadVersion();
+            INSTANCE.VersionDatabase = new LiteDB.LiteDatabase(path);
+        }
+
+        internal static void UnloadVersion() {
+            if(INSTANCE.VersionDatabase != null) INSTANCE.VersionDatabase.Dispose();
+            INSTANCE.VersionDatabase = null;
+        }
+
+        #region Command Line Arguments
         /// <summary>
         /// Given a set of arguments, execute the things that need to happen.
         /// </summary>
@@ -164,13 +155,13 @@ namespace RobotGryphon.Modifi {
             IEnumerable<string> mods = arguments.Skip(1);
 
             foreach (string mod in mods) {
-                Mods.ModVersion modVersion = ModHelper.SplitDomainAndID(mod);
+                Mods.IModVersion modVersion = ModHelper.SplitDomainAndID(mod);
 
-                if (!INSTANCE.DomainHandlers.ContainsKey(modVersion.Domain.ToLower())) {
+                if (!INSTANCE.DomainHandlers.ContainsKey(modVersion.GetDomain().ToLower())) {
                     throw new NotImplementedException("Custom domains are not yet supported.");
                 }
 
-                IDomainHandler handler = INSTANCE.DomainHandlers[modVersion.Domain.ToLower()];
+                IDomainHandler handler = INSTANCE.DomainHandlers[modVersion.GetDomain().ToLower()];
                 switch (action) {
 
                     case ModActions.INVALID:
@@ -203,5 +194,6 @@ namespace RobotGryphon.Modifi {
                 }
             }
         }
+        #endregion
     }
 }

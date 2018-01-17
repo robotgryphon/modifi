@@ -6,6 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi.Domains.CurseForge {
+
+    /// <summary>
+    /// Used to deserialize Curseforge API information.
+    /// </summary>
     public struct CurseforgeModMetadata : Mods.IModMetadata {
         public int ID;
         public string Title;
@@ -17,28 +21,30 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         public CurseForgeURLs URLs;
 
+        public string ModIdentifier { get; internal set; }
+
         #region IModMetadata
-        public string GetName() {
+        string IModMetadata.GetName() {
             return Title;
         }
 
-        public string GetModVersion() {
+        string IModMetadata.GetModVersion() {
             return RequestedVersion.FileId;
         }
 
-        public string GetDomain() {
+        string IModMetadata.GetDomain() {
             return "curseforge";
         }
 
-        public string GetModId() {
-            return RequestedVersion.ModID;
+        string IModMetadata.GetModId() {
+            return ModIdentifier;
         }
 
-        public string GetDescription() {
+        string IModMetadata.GetDescription() {
             return Description;
         }
 
-        public bool HasDescription() {
+        bool IModMetadata.HasDescription() {
             return !String.IsNullOrWhiteSpace(Description);
         }
 
@@ -48,27 +54,5 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
     public struct CurseForgeURLs {
         public string Project;
         public string Curseforge;
-    }
-
-    public class CurseforgeModVersion {
-        
-        public string Name { get; set; }
-        public string Version { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("versions")]
-        public string[] MinecraftVersions { get; set; }
-
-        public string ModID { get; set; }
-
-        /// <summary>
-        /// The type of release the mod is.
-        /// </summary>
-        public ModReleaseType Type { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("url")]
-        public string DownloadURL { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("id")]
-        public string FileId { get; set; }
     }
 }

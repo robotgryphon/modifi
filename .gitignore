@@ -4,3 +4,6 @@ obj/
 .vs/
 Run/
 /Modifi/Properties/launchSettings.json
+LiteDB\.Shell\.exe
+
+LiteDB\.dll

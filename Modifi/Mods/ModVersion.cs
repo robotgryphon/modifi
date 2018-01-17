@@ -2,13 +2,34 @@
 
 namespace RobotGryphon.Modifi.Mods {
 
-    public struct ModVersion {
+    /// <summary>
+    /// Represents a specific version of a mod.
+    /// </summary>
+    public interface IModVersion {
+
+        string GetDomain();
+
+        string GetModIdentifier();
+
+        string GetModVersion();
+
+    }
+
+    public class ModVersionStub : IModVersion {
         public string Domain;
-        public string ModId;
+        public string Identifier;
         public string Version;
 
-        public override string ToString() {
-            return string.Format("{0}:{1} [{2}]", Domain, ModId, String.IsNullOrEmpty(Version) ? "latest" : Version);
+        public string GetDomain() {
+            return Domain;
+        }
+
+        public string GetModIdentifier() {
+            return Identifier;
+        }
+
+        public string GetModVersion() {
+            return Version;
         }
     }
 }

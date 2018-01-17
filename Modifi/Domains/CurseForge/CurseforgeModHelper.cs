@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using RobotGryphon.Modifi.Mods;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RobotGryphon.Modifi.Domains.CurseForge {
 
@@ -22,6 +24,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         public CurseforgeModHelper() { }
 
+        
 
         /// <summary>
         /// Download the mod using information found in Metadata.
@@ -73,6 +76,31 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             catch(Exception) {
                 return ModDownloadResult.ERROR_DOWNLOAD_FAILED;
             }
+        }
+
+        public override IEnumerable<IModVersion> FetchRecentModVersions(IModMetadata meta) {
+            string mcVersion = Modifi.GetMinecraftVersion();
+
+            if (!(meta is CurseforgeModMetadata))
+                throw new Exception("Metadata is not of Curseforge's type. Cannot fetch mod versions with this.");
+
+            CurseforgeModMetadata metaCF = (CurseforgeModMetadata) meta;
+            if (!metaCF.Versions.ContainsKey(mcVersion)) {
+                // TODO: Change this to a MinecraftVersionException or something similar
+                throw new Exception("Mod does not have versions for your requested Minecraft version.");
+            }
+
+            IEnumerable<CurseforgeModVersion> versions = metaCF.Versions[mcVersion];
+
+            // TODO: Configurable number of results shown?
+            IEnumerable<CurseforgeModVersion> limitedList = versions.Take(5);
+            return limitedList;
+        }
+
+        public override void PrintModInformation(IModMetadata meta) {
+            base.PrintModInformation(meta);
+
+            CurseforgeModMetadata metaData = (CurseforgeModMetadata) meta;
         }
     }
 }

@@ -27,13 +27,15 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             ModHelper = new CurseforgeModHelper();
         }
 
-        public static async Task<CurseforgeModMetadata> GetModInfo(ModVersion version) {
+        public static async Task<CurseforgeModMetadata> GetModInfo(IModVersion version) {
+
+            Console.WriteLine("Fetching metadata for {0}...", version.GetModIdentifier());
 
             Uri api;
-            if (!String.IsNullOrEmpty(version.Version))
-                api = new Uri(String.Format("{0}/{1}?version={2}", CurseForge.ApiURL, version.ModId, version.Version));
+            if (!String.IsNullOrEmpty(version.GetModVersion()))
+                api = new Uri(String.Format("{0}/{1}?version={2}", CurseForge.ApiURL, version.GetModIdentifier(), version.GetModVersion()));
             else
-                api = new Uri(String.Format("{0}/{1}", CurseForge.ApiURL, version.ModId));
+                api = new Uri(String.Format("{0}/{1}", CurseForge.ApiURL, version.GetModIdentifier()));
 
             try {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(api);
@@ -47,6 +49,8 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
                 String modData = await reader.ReadToEndAsync();
 
                 CurseforgeModMetadata modInfo = JsonConvert.DeserializeObject<CurseforgeModMetadata>(modData);
+                modInfo.ModIdentifier = version.GetModIdentifier();
+                modInfo.RequestedVersion.ModIdentifier = version.GetModIdentifier();
 
                 resp.Close();
                 response.Close();
@@ -66,30 +70,21 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// </summary>
         /// <param name="version">Which mod to fetch information on</param>
         /// <returns>Mod metadata. (Curseforge version)</returns>
-        public static async Task<IModMetadata> GetModMetadata(ModVersion version) => await GetModInfo(version);
+        public static async Task<IModMetadata> GetModMetadata(IModVersion version) => await GetModInfo(version);
 
         public string GetProjectURL(IModMetadata meta) {
             if (!(meta is CurseforgeModMetadata)) throw new Exception("Expected curseforge mod, got invalid.");
             return ((CurseforgeModMetadata)meta).URLs.Project;
         }
 
-        public void HandleModVersions(ModVersion mod) {
+        public void HandleModVersions(IModVersion mod) {
             Task<CurseforgeModMetadata> metaTask = GetModInfo(mod);
             CurseforgeModMetadata meta = metaTask.Result;
-            string mcVersion = Modifi.GetMinecraftVersion();
 
-            if (!meta.Versions.ContainsKey(mcVersion)) {
-                Console.Error.WriteLine("Error: Mod not supported for Minecraft version {0}.", mcVersion);
-                return;
-            }
-
-            IEnumerable<CurseforgeModVersion> versions = meta.Versions[mcVersion];
-
-            // TODO: Configurable number of results shown?
-            IEnumerable<CurseforgeModVersion> limitedList = versions.Take(5);
+            IEnumerable<CurseforgeModVersion> latestVersions = (IEnumerable<CurseforgeModVersion>) ModHelper.FetchRecentModVersions(meta);
 
             ModHelper.PrintModInformation(meta);
-            foreach (CurseforgeModVersion version in limitedList) {
+            foreach (CurseforgeModVersion version in latestVersions) {
                 Console.Write("[");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write(version.FileId);
@@ -110,32 +105,74 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             }
         }
 
-        public void HandleModAdd(ModVersion mod) {
+        public void HandleModAdd(IModVersion mod) {
+
+            IModMetadata meta = GetModInfo(mod).Result;
+
+            ModHelper.PrintModInformation(meta);
+
+            CurseforgeModMetadata meta2 = (CurseforgeModMetadata)meta;
+            IEnumerable<CurseforgeModVersion> versions = meta2.Versions[Modifi.GetMinecraftVersion()];
+
+            CurseforgeModVersion latestRelease = versions.First(x => x.Type == ModReleaseType.RELEASE);
+
+            List<CurseforgeModVersion> versionList = new List<CurseforgeModVersion>();
+            versionList.Add(latestRelease);
+            versionList.Add(versions.First());
+
+            Menu<CurseforgeModVersion> menu = new Menu<CurseforgeModVersion>();
+
+            menu.OptionFormatter = (opt) => {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(opt.Name);
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                Console.Write(" [");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(opt.FileId);
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                Console.Write("]");
+
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(" [{0}]", opt.Type);
+                Console.WriteLine();
+            };
+
+            menu.AddItem(latestRelease);
+            menu.AddItem(versions.First());
+            menu.AddSpacer();
+
+            foreach (CurseforgeModVersion v in versions.Skip(1).Take(5)) menu.AddItem(v);
+
+            menu.DrawMenu();
+
+            Console.ResetColor();
+
+            Console.WriteLine();
+            CurseforgeModVersion version = menu.SelectedOption;
+            Console.WriteLine("Selected Version: " + version.Name);
+
+            version.ModIdentifier = mod.GetModIdentifier();
+
+            LiteDB.LiteDatabase db = Modifi.FetchCurrentVersion();
+            var c = db.GetCollection<CurseforgeModVersion>("mods-curseforge");
+            c.Insert(version);
+        }
+
+        public void HandleModRemove(IModVersion mod) {
             throw new NotImplementedException();
         }
 
-        public void HandleModRemove(ModVersion mod) {
-            throw new NotImplementedException();
-        }
-
-        public void HandleModInformation(ModVersion mod) {
-            Task<CurseforgeModMetadata> meta = GetModInfo(mod);
-            CurseforgeModMetadata metaData = meta.Result;
+        public void HandleModInformation(IModVersion mod) {
+            CurseforgeModMetadata meta = GetModInfo(mod).Result;
 
             // Print out mod information
-            ModHelper.PrintModInformation(metaData);
-
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine();
-            Console.WriteLine("URL: {0}", metaData.RequestedVersion.DownloadURL);
-            Console.WriteLine("File ID: {0}", metaData.RequestedVersion.FileId);
+            ModHelper.PrintModInformation(meta);
         }
 
-        public ModDownloadResult HandleModDownload(ModVersion modVersion) {
-            Task<CurseforgeModMetadata> meta = CurseForge.GetModInfo(modVersion);
-            CurseforgeModMetadata meta2 = meta.Result;
+        public ModDownloadResult HandleModDownload(IModVersion modVersion) {
+            CurseforgeModMetadata meta = CurseForge.GetModInfo(modVersion).Result;
 
-            Task<ModDownloadResult> result = ModHelper.DownloadMod(meta2);
+            Task<ModDownloadResult> result = ModHelper.DownloadMod(meta);
             return result.Result;
         }
     }

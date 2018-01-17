@@ -1,14 +1,15 @@
 ﻿using RobotGryphon.Modifi.Mods;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi {
     public abstract class ModHelper {
 
-        public static ModVersion SplitDomainAndID(string modid) {
+        public static IModVersion SplitDomainAndID(string modid) {
 
-            Regex r = new Regex(@"(?<domain>[\w]+):(?<modid>[\w_\-]+)");
+            Regex r = new Regex(@"(?<domain>[\w]+):(?<modid>[\w_\-]+)(@(?<version>[\d]+))?");
             if(!r.IsMatch(modid)) {
                 // TODO: Change this to a proper exception class
                 throw new Exception("Invalid modid format: " + modid + ". Expected format of domain:modid (like Minecraft resource names).");
@@ -16,18 +17,18 @@ namespace RobotGryphon.Modifi {
 
             Match m = r.Match(modid);
 
-            ModVersion i = new ModVersion();
-            i.Domain = m.Groups["domain"].Value;
-            i.ModId = m.Groups["modid"].Value;
-
-            return i;
+            return new ModVersionStub {
+                Domain = m.Groups["domain"].Value,
+                Identifier = m.Groups["modid"].Value,
+                Version = m.Groups["version"].Value
+            };
         }
 
         /// <summary>
         /// Prints out some mod information in a standardized manner.
         /// </summary>
         /// <param name="meta"></param>
-        public void PrintModInformation(IModMetadata meta) {
+        public virtual void PrintModInformation(IModMetadata meta) {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
             Console.Write(meta.GetName());
@@ -53,6 +54,14 @@ namespace RobotGryphon.Modifi {
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Downloads a mod from a domain, given a set of defined metadata.
+        /// </summary>
+        /// <param name="meta">The mod's metadata. The domain should handle conversion to what it needs.</param>
+        /// <returns>A result on the download.</returns>
         public abstract Task<ModDownloadResult> DownloadMod(IModMetadata meta);
+
+
+        public abstract IEnumerable<IModVersion> FetchRecentModVersions(IModMetadata meta);
     }
 }

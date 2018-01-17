@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 namespace RobotGryphon.Modifi.Domains {
     public interface IDomainHandler {
 
-        void HandleModAdd(ModVersion mod);
+        void HandleModAdd(IModVersion mod);
 
-        void HandleModRemove(ModVersion mod);
+        void HandleModRemove(IModVersion mod);
 
-        void HandleModInformation(ModVersion mod);
+        void HandleModInformation(IModVersion mod);
 
-        void HandleModVersions(ModVersion mod);
+        void HandleModVersions(IModVersion mod);
 
         string GetProjectURL(IModMetadata meta);
 
-        ModDownloadResult HandleModDownload(ModVersion modVersion);
+        ModDownloadResult HandleModDownload(IModVersion modVersion);
     }
 }
