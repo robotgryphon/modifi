@@ -29,13 +29,36 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         public override async Task<ModDownloadResult> DownloadMod(IModVersion version) {
 
             CurseforgeModVersion versionInfo;
-            if (!(version is CurseforgeModVersion)) {
-                versionInfo = CurseForge.GetModInfo(version).Result.RequestedVersion;
+
+            // If we say the mod is installed, then check the database and checksums
+            if (IsModInstalled(version)) {
+                // Do file check if mod is already in database
+                versionInfo = (CurseforgeModVersion) this.FetchInstalledModMetadata(version);
+                string installPath = Path.Combine(Settings.ModPath, versionInfo.Filename);
+
+                if(File.Exists(installPath)) {
+                    // Check checksum to see if mod downloaded already
+                    using(var md5 = MD5.Create()) {
+                        using (var fileStream = File.OpenRead(installPath)) {
+                            byte[] hash = md5.ComputeHash(fileStream);
+                            string hashString = BitConverter.ToString(hash).Replace("-", String.Empty).ToLower();
+
+                            if (hashString == versionInfo.Checksum) {
+                                Console.WriteLine("Mod {0} is already downloaded, checksum matched. Skipping.", version.GetModIdentifier());
+                                return ModDownloadResult.SUCCESS;
+                            }
+                        }
+                    }
+                }
             } else {
-                versionInfo = (CurseforgeModVersion)version;
+                if(version is CurseforgeModVersion)
+                    versionInfo = version as CurseforgeModVersion;
+                else {
+                    throw new Exception("Error: Given version is not a Curseforge mod version. Cannot download.");
+                }
             }
 
-            
+            // If we get here, the installed version was not found or corrupted
             if (versionInfo.FileId == null)
                 throw new Exception("Error during download: Mod metadata has not been fetched from Curseforge yet.");
 
