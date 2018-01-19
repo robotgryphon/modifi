@@ -1,4 +1,5 @@
-﻿using RobotGryphon.Modifi.Mods;
+﻿using LiteDB;
+using RobotGryphon.Modifi.Mods;
 using System;
 
 namespace RobotGryphon.Modifi.Domains.CurseForge {
@@ -6,10 +7,14 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         public Guid Id { get; set; }
 
+        [BsonIgnore]
         public string Name { get; set; }
+
+        [BsonIgnore]
         public string Version { get; set; }
 
         [Newtonsoft.Json.JsonProperty("versions")]
+        [BsonIgnore]
         public string[] MinecraftVersions { get; set; }
 
         /// <summary>
@@ -20,6 +25,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// <summary>
         /// The type of release the mod is.
         /// </summary>
+        [BsonIgnore]
         public ModReleaseType Type { get; set; }
 
         [Newtonsoft.Json.JsonProperty("url")]

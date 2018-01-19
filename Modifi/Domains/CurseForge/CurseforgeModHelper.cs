@@ -33,7 +33,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             // If we say the mod is installed, then check the database and checksums
             if (IsModInstalled(version)) {
                 // Do file check if mod is already in database
-                versionInfo = (CurseforgeModVersion) this.FetchInstalledModMetadata(version);
+                versionInfo = (CurseforgeModVersion) this.GetInstalledModVersion(version);
                 string installPath = Path.Combine(Settings.ModPath, versionInfo.Filename);
 
                 if(File.Exists(installPath)) {
@@ -54,7 +54,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
                 if(version is CurseforgeModVersion)
                     versionInfo = version as CurseforgeModVersion;
                 else {
-                    throw new Exception("Error: Given version is not a Curseforge mod version. Cannot download.");
+                    versionInfo = CurseForge.GetModInfo(version).Result.RequestedVersion;
                 }
             }
 
@@ -142,13 +142,15 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         }
 
         public bool IsModInstalled(IModVersion mod) {
+            if (!Modifi.CollectionExists(INSTALLED_MODS_COLLECTION)) return false;
+
             LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
 
             // TODO: Make this smarter by also checking for a hash
             return versions.Exists(x => x.ModIdentifier == mod.GetModIdentifier());
         }
 
-        public IModVersion FetchInstalledModMetadata(IModVersion mod) {
+        public IModVersion GetInstalledModVersion(IModVersion mod) {
             if (!IsModInstalled(mod)) return null;
 
             LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);

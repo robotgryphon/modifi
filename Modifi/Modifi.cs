@@ -148,13 +148,16 @@ namespace RobotGryphon.Modifi {
         }
 
         public static LiteDB.LiteDatabase FetchCurrentVersion() {
+            if (!INSTANCE.PackLoaded) LoadPack();
+
+            if (INSTANCE.VersionDatabase == null)
+                LoadVersion(INSTANCE.Pack.Installed);
+
             return INSTANCE.VersionDatabase;
         }
 
         public static LiteDB.LiteCollection<T> FetchCollection<T>(string collectionName) {
             LiteDB.LiteDatabase db = FetchCurrentVersion();
-            if(!db.CollectionExists(collectionName)) return null;
-
             return db.GetCollection<T>(collectionName);
         }
 
@@ -198,6 +201,11 @@ namespace RobotGryphon.Modifi {
             LIST,
             DOWNLOAD,
             VERSIONS
+        }
+
+        public static bool CollectionExists(string collectionName) {
+            var db = FetchCurrentVersion();
+            return db.CollectionExists(collectionName);
         }
 
         private static void HandleModAction(string[] input) {
