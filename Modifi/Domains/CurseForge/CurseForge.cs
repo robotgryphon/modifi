@@ -170,9 +170,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         }
 
         public ModDownloadResult HandleModDownload(IModVersion modVersion) {
-            CurseforgeModMetadata meta = CurseForge.GetModInfo(modVersion).Result;
-
-            Task<ModDownloadResult> result = ModHelper.DownloadMod(meta);
+            Task<ModDownloadResult> result = ModHelper.DownloadMod(modVersion);
             return result.Result;
         }
     }

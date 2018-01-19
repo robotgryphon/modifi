@@ -1,11 +1,13 @@
 ﻿using Newtonsoft.Json;
 using RobotGryphon.Modifi.Domains;
+using RobotGryphon.Modifi.Mods;
 using RobotGryphon.Modifi.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi {
@@ -19,7 +21,48 @@ namespace RobotGryphon.Modifi {
         DOWNLOAD
     }
 
+    
+
     public class Modifi {
+
+        protected struct ModVersionStub : IModVersion {
+            private IDomainHandler Domain;
+            private string ModIdentifier;
+            private string ModVersion;
+
+            public static ModVersionStub Create(string modVersionString) {
+                ModVersionStub stub = new ModVersionStub();
+                stub.Domain = ModHelper.GetDomainHandler(modVersionString);
+
+                if(ModHelper.MOD_VERSION_REGEX.IsMatch(modVersionString)) {
+                    Match m = ModHelper.MOD_VERSION_REGEX.Match(modVersionString);
+                    stub.ModIdentifier = m.Groups["modid"].Value;
+                    stub.ModVersion = m.Groups["version"].Value;
+                } else {
+                    stub.ModIdentifier = "unknown";
+                    stub.ModVersion = "latest";
+                }
+                
+                return stub;
+            }
+
+            IDomainHandler IModVersion.GetDomain() {
+                return Domain;
+            }
+
+            string IModVersion.GetModIdentifier() {
+                return ModIdentifier;
+            }
+
+            string IModVersion.GetModVersion() {
+                return ModVersion;
+            }
+
+            string IModVersion.GetFilename() {
+                throw new NotSupportedException("Error: Do not support filenames on mod stubs, this is for telling other code about a " +
+                    "passed-in version from the command line.");
+            }
+        }
 
         #region Properties
         /// <summary>
@@ -57,6 +100,10 @@ namespace RobotGryphon.Modifi {
             DomainHandlers = new Dictionary<string, IDomainHandler> {
                 { "curseforge", Domains.CurseForge.CurseForge.INSTANCE }
             };
+        }
+
+        public static bool IsDomainRegistered(string domain) {
+            return INSTANCE.DomainHandlers.ContainsKey(domain.ToLowerInvariant());
         }
 
         /// <summary>
@@ -102,6 +149,13 @@ namespace RobotGryphon.Modifi {
 
         public static LiteDB.LiteDatabase FetchCurrentVersion() {
             return INSTANCE.VersionDatabase;
+        }
+
+        public static LiteDB.LiteCollection<T> FetchCollection<T>(string collectionName) {
+            LiteDB.LiteDatabase db = FetchCurrentVersion();
+            if(!db.CollectionExists(collectionName)) return null;
+
+            return db.GetCollection<T>(collectionName);
         }
 
         public static void LoadVersion(string version = "1.0.0") {
@@ -155,13 +209,11 @@ namespace RobotGryphon.Modifi {
             IEnumerable<string> mods = arguments.Skip(1);
 
             foreach (string mod in mods) {
-                Mods.IModVersion modVersion = ModHelper.SplitDomainAndID(mod);
+                IDomainHandler handler = ModHelper.GetDomainHandler(mod);
+                if (handler == null)
+                    throw new Exception("That domain does not have a registered handler. Aborting.");
 
-                if (!INSTANCE.DomainHandlers.ContainsKey(modVersion.GetDomain().ToLower())) {
-                    throw new NotImplementedException("Custom domains are not yet supported.");
-                }
-
-                IDomainHandler handler = INSTANCE.DomainHandlers[modVersion.GetDomain().ToLower()];
+                ModVersionStub modVersion = ModVersionStub.Create(mod);
                 switch (action) {
 
                     case ModActions.INVALID:

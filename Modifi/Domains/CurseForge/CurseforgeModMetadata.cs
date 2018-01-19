@@ -28,15 +28,11 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             return Title;
         }
 
-        string IModMetadata.GetModVersion() {
-            return RequestedVersion.FileId;
+        IDomainHandler IModMetadata.GetDomain() {
+            return Modifi.GetDomainHandler("curseforge");
         }
 
-        string IModMetadata.GetDomain() {
-            return "curseforge";
-        }
-
-        string IModMetadata.GetModId() {
+        string IModMetadata.GetModIdentifier() {
             return ModIdentifier;
         }
 

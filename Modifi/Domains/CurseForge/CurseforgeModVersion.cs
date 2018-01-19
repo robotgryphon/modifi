@@ -13,6 +13,11 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         public string[] MinecraftVersions { get; set; }
 
         /// <summary>
+        /// The location of the mod on disk, if it is downloaded.
+        /// </summary>
+        public string Filename { get; set; }
+
+        /// <summary>
         /// The type of release the mod is.
         /// </summary>
         public ModReleaseType Type { get; set; }
@@ -28,8 +33,18 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// </summary>
         public string ModIdentifier { get; internal set; }
 
-        string IModVersion.GetDomain() {
-            return "curseforge";
+
+        /// <summary>
+        /// An MD5 hash of the file to ensure it downloaded correctly.
+        /// </summary>
+        public string Checksum { get; internal set; }
+
+        IDomainHandler IModVersion.GetDomain() {
+            return Modifi.GetDomainHandler("curseforge");
+        }
+
+        string IModVersion.GetFilename() {
+            return Filename;
         }
 
         string IModVersion.GetModIdentifier() {

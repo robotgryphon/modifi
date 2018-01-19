@@ -15,35 +15,34 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
     public class CurseforgeModHelper : ModHelper {
 
-        /// <summary>
-        /// The curseforge id of the mod (ie: jei)
-        /// </summary>
-        public string ProjectId { get; set; }
-
         protected Regex FILENAME_MATCH = new Regex(@".*?/([^/]*)$");
 
-        public CurseforgeModHelper() { }
-
-        
+        /// <summary>
+        /// The database collection that has information on the currently-requested or installed mods.
+        /// </summary>
+        public const string INSTALLED_MODS_COLLECTION = "mods-curseforge";
 
         /// <summary>
         /// Download the mod using information found in Metadata.
         /// </summary>
         /// <returns></returns>
-        public override async Task<ModDownloadResult> DownloadMod(IModMetadata meta) {
+        public override async Task<ModDownloadResult> DownloadMod(IModVersion version) {
 
-            if(!(meta is CurseforgeModMetadata)) {
-                throw new Exception("Meta passed to Curseforge helper was not a Curseforge mod metadata object.");
+            CurseforgeModVersion versionInfo;
+            if (!(version is CurseforgeModVersion)) {
+                versionInfo = CurseForge.GetModInfo(version).Result.RequestedVersion;
+            } else {
+                versionInfo = (CurseforgeModVersion)version;
             }
 
-            CurseforgeModMetadata meta2 = (CurseforgeModMetadata) meta;
-            if (meta2.RequestedVersion.FileId == null)
+            
+            if (versionInfo.FileId == null)
                 throw new Exception("Error during download: Mod metadata has not been fetched from Curseforge yet.");
 
             if (!Directory.Exists(Settings.ModPath)) Directory.CreateDirectory(Settings.ModPath);
 
             try {
-                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(meta2.RequestedVersion.DownloadURL + "/file"));
+                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(versionInfo.DownloadURL + "/file"));
                 using (WebResponse r = await webRequest.GetResponseAsync()) {
                     Uri downloadUri = r.ResponseUri;
 
@@ -68,6 +67,17 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
                         fs.Flush();
                         fs.Close();
 
+                        versionInfo.Filename = filename;
+
+                        using(var md5 = MD5.Create()) {
+                            using (var stream = File.OpenRead(Path.Combine(Settings.ModPath, filename))) {
+                                byte[] hash = md5.ComputeHash(stream);
+                                versionInfo.Checksum = BitConverter.ToString(hash).Replace("-", String.Empty).ToLower();
+                            }
+                        }
+
+                        this.MarkInstalled(versionInfo);
+
                         return ModDownloadResult.SUCCESS;
                     }
                 }
@@ -76,6 +86,17 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             catch(Exception) {
                 return ModDownloadResult.ERROR_DOWNLOAD_FAILED;
             }
+        }
+
+        public void MarkInstalled(IModVersion versionInfo) {
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
+
+            if (!(versionInfo is CurseforgeModVersion))
+                throw new Exception("Tried to mark a non-curseforge mod as installed under Curseforge domain.");
+
+            // Remove existing version and replace it with the new version information
+            versions.Delete(x => x.ModIdentifier == versionInfo.GetModIdentifier());
+            versions.Insert(versionInfo as CurseforgeModVersion);
         }
 
         public override IEnumerable<IModVersion> FetchRecentModVersions(IModMetadata meta) {
@@ -97,10 +118,18 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
             return limitedList;
         }
 
-        public override void PrintModInformation(IModMetadata meta) {
-            base.PrintModInformation(meta);
+        public bool IsModInstalled(IModVersion mod) {
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
 
-            CurseforgeModMetadata metaData = (CurseforgeModMetadata) meta;
+            // TODO: Make this smarter by also checking for a hash
+            return versions.Exists(x => x.ModIdentifier == mod.GetModIdentifier());
+        }
+
+        public IModVersion FetchInstalledModMetadata(IModVersion mod) {
+            if (!IsModInstalled(mod)) return null;
+
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
+            return versions.FindOne(x => x.ModIdentifier == mod.GetModIdentifier());
         }
     }
 }

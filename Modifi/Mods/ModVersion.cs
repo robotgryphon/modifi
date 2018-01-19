@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RobotGryphon.Modifi.Domains;
+using System;
 
 namespace RobotGryphon.Modifi.Mods {
 
@@ -7,29 +8,16 @@ namespace RobotGryphon.Modifi.Mods {
     /// </summary>
     public interface IModVersion {
 
-        string GetDomain();
+        IDomainHandler GetDomain();
 
         string GetModIdentifier();
 
         string GetModVersion();
 
-    }
-
-    public class ModVersionStub : IModVersion {
-        public string Domain;
-        public string Identifier;
-        public string Version;
-
-        public string GetDomain() {
-            return Domain;
-        }
-
-        public string GetModIdentifier() {
-            return Identifier;
-        }
-
-        public string GetModVersion() {
-            return Version;
-        }
+        /// <summary>
+        /// Gets the location of the mod file on disk.
+        /// </summary>
+        /// <returns></returns>
+        string GetFilename();
     }
 }
