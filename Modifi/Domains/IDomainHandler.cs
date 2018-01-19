@@ -19,5 +19,11 @@ namespace RobotGryphon.Modifi.Domains {
         string GetProjectURL(IModMetadata meta);
 
         ModDownloadResult HandleModDownload(IModVersion modVersion);
+
+        Task<IModMetadata> GetModMetadata(IModVersion version);
+
+        IModVersion GetInstalledModVersion(IModVersion version);
+
+        bool IsModInstalled(IModVersion version);
     }
 }

@@ -22,7 +22,7 @@ namespace RobotGryphon.Modifi {
             string[] input = args;
             
             #if DEBUG
-            input = new string[] { "mods", "download", "curseforge:jei" };
+            input = new string[] { "mods", "info", "curseforge:jei" };
             #endif
 
             if(input.Length < 1) {

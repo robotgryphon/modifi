@@ -1,0 +1,38 @@
+curseforge: 1.0.0
+    ModIdentifier
+    FileID
+    DownloadURL
+    Filename
+    Checksum
+
+
+== NO OTHER CHANGES BETWEEN VERSIONS ==
+
+MAJOR VERSION UPDATE: 1.1.0
+-------------------------------------------------------------------------------------------
+All of the cumulative changes from minor versions
+-------------------------------------------------------------------------------------------
+curseforge:  (Same structure as above, used for adding new mods)
+
+curseforge-changes:
+    ModIdentifier       | Used to see if mod is installed - if so, it fetches a checksum from the installed version to remove it
+    NewFileID           | Tells modifi what file we're updating to
+    NewChecksum         | New file checksum, hashed on completed download
+    ChangeType          | UPDATE, REMOVE
+    DownloadURL         |
+
+
+
+=====================================================================================================================================
+
+MINOR VERSION UPDATE: 1.0.1
+-------------------------------------------------------------------------------------------
+Small mod changes between versions
+-------------------------------------------------------------------------------------------
+
+domain-changes:
+    ModIdentifier       | Used to see if mod is installed - if so, it fetches a checksum from the installed version to remove it
+    NewFileID           | Tells modifi what file we're updating to
+    NewChecksum         | New file checksum, hashed on completed download
+    ChangeType          | UPDATE, REMOVE
+    DownloadURL         |

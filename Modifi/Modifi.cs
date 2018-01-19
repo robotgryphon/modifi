@@ -98,7 +98,7 @@ namespace RobotGryphon.Modifi {
 
             // Instantiate the domain handlers, make sure the built-in curseforge handler is added
             DomainHandlers = new Dictionary<string, IDomainHandler> {
-                { "curseforge", Domains.CurseForge.CurseForge.INSTANCE }
+                { "curseforge", Domains.CurseForge.CurseforgeDomainHandler.INSTANCE }
             };
         }
 

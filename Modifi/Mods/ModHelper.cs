@@ -36,7 +36,7 @@ namespace RobotGryphon.Modifi {
         /// Prints out some mod information in a standardized manner.
         /// </summary>
         /// <param name="meta"></param>
-        public virtual void PrintModInformation(IModMetadata meta) {
+        public static void PrintModInformation(IModMetadata meta) {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
             Console.Write(meta.GetName());
@@ -62,15 +62,5 @@ namespace RobotGryphon.Modifi {
             Console.WriteLine("".PadLeft(Console.BufferWidth - 10, '='));
             Console.ResetColor();
         }
-
-        /// <summary>
-        /// Downloads a mod from a domain, given a set of defined metadata.
-        /// </summary>
-        /// <param name="version">The version of the mod to download.</param>
-        /// <returns>A result on the download.</returns>
-        public abstract Task<ModDownloadResult> DownloadMod(IModVersion version);
-
-
-        public abstract IEnumerable<IModVersion> FetchRecentModVersions(IModMetadata meta);
     }
 }
