@@ -36,10 +36,10 @@ namespace RobotGryphon.Modifi {
         /// Prints out some mod information in a standardized manner.
         /// </summary>
         /// <param name="meta"></param>
-        public static void PrintModInformation(IModMetadata meta) {
+        public static void PrintModInformation(IModMetadata meta, bool header = false) {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
-            Console.Write(meta.GetName());
+            Console.WriteLine(meta.GetName());
             Console.ForegroundColor = ConsoleColor.White;
 
             //Console.Write(" (");
@@ -58,8 +58,11 @@ namespace RobotGryphon.Modifi {
                 Console.WriteLine(meta.GetDescription());
             }
 
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("".PadLeft(Console.BufferWidth - 10, '='));
+            if (header) {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("".PadLeft(Console.BufferWidth - 10, '='));
+            }
+
             Console.ResetColor();
         }
     }

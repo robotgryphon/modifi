@@ -157,8 +157,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
             version.ModIdentifier = mod.GetModIdentifier();
 
-            LiteDB.LiteDatabase db = Modifi.FetchCurrentVersion();
-            var c = db.GetCollection<CurseforgeModVersion>("mods-curseforge");
+            LiteDB.LiteCollection<CurseforgeModVersion> c = Modifi.CurrentVersion.FetchCollection<CurseforgeModVersion>(CurseforgeDomainHandler.INSTALLED_MODS_COLLECTION);
             c.Insert(version);
         }
 
@@ -273,7 +272,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         }
 
         protected void MarkInstalled(IModVersion versionInfo) {
-            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.CurrentVersion.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
 
             if (!(versionInfo is CurseforgeModVersion))
                 throw new Exception("Tried to mark a non-curseforge mod as installed under Curseforge domain.");
@@ -303,9 +302,9 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         }
 
         public bool IsModInstalled(IModVersion mod) {
-            if (!Modifi.CollectionExists(INSTALLED_MODS_COLLECTION)) return false;
+            if (!Modifi.CurrentVersion.CollectionExists(INSTALLED_MODS_COLLECTION)) return false;
 
-            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.CurrentVersion.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
 
             // TODO: Make this smarter by also checking for a hash
             return versions.Exists(x => x.ModIdentifier == mod.GetModIdentifier());
@@ -314,7 +313,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         public IModVersion GetInstalledModVersion(IModVersion mod) {
             if (!IsModInstalled(mod)) return null;
 
-            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
+            LiteDB.LiteCollection<CurseforgeModVersion> versions = Modifi.CurrentVersion.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
             return versions.FindOne(x => x.ModIdentifier == mod.GetModIdentifier());
         }
     }

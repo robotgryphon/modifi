@@ -1,13 +1,11 @@
 ﻿using Newtonsoft.Json;
 using RobotGryphon.Modifi.Domains;
-using RobotGryphon.Modifi.Mods;
 using RobotGryphon.Modifi.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi {
@@ -23,62 +21,24 @@ namespace RobotGryphon.Modifi {
 
     
 
-    public class Modifi {
-
-        protected struct ModVersionStub : IModVersion {
-            private IDomainHandler Domain;
-            private string ModIdentifier;
-            private string ModVersion;
-
-            public static ModVersionStub Create(string modVersionString) {
-                ModVersionStub stub = new ModVersionStub();
-                stub.Domain = ModHelper.GetDomainHandler(modVersionString);
-
-                if(ModHelper.MOD_VERSION_REGEX.IsMatch(modVersionString)) {
-                    Match m = ModHelper.MOD_VERSION_REGEX.Match(modVersionString);
-                    stub.ModIdentifier = m.Groups["modid"].Value;
-                    stub.ModVersion = m.Groups["version"].Value;
-                } else {
-                    stub.ModIdentifier = "unknown";
-                    stub.ModVersion = "latest";
-                }
-                
-                return stub;
-            }
-
-            IDomainHandler IModVersion.GetDomain() {
-                return Domain;
-            }
-
-            string IModVersion.GetModIdentifier() {
-                return ModIdentifier;
-            }
-
-            string IModVersion.GetModVersion() {
-                return ModVersion;
-            }
-
-            string IModVersion.GetFilename() {
-                throw new NotSupportedException("Error: Do not support filenames on mod stubs, this is for telling other code about a " +
-                    "passed-in version from the command line.");
-            }
-        }
+    public partial class Modifi : IDisposable {
 
         #region Properties
         /// <summary>
         /// The current pack in the working directory.
         /// </summary>
-        public Storage.Pack Pack;
+        private Storage.Pack Pack;
+        private string InstalledVersionString;
 
-        /// <summary>
-        /// The current version of the pack.
-        /// </summary>
-        public LiteDB.LiteDatabase VersionDatabase;
+        protected VersionFile _Version;
+        public static VersionFile CurrentVersion {
+            get { return INSTANCE._Version; }
+            private set { }
+        }
 
         public Dictionary<string, IDomainHandler> DomainHandlers;
 
         private static Modifi _INSTANCE;
-
         public static Modifi INSTANCE {
             get {
                 if (_INSTANCE != null) return _INSTANCE;
@@ -144,36 +104,21 @@ namespace RobotGryphon.Modifi {
             StreamReader sr = new StreamReader(File.OpenRead(Settings.PackFile));
             INSTANCE.Pack = s.Deserialize<Pack>(new JsonTextReader(sr));
             INSTANCE.PackLoaded = true;
+            INSTANCE.InstalledVersionString = INSTANCE.Pack.Installed;
             sr.Close();
+
+            INSTANCE._Version = new VersionFile(INSTANCE.InstalledVersionString);
         }
 
-        public static LiteDB.LiteDatabase FetchCurrentVersion() {
-            if (!INSTANCE.PackLoaded) LoadPack();
-
-            if (INSTANCE.VersionDatabase == null)
-                LoadVersion(INSTANCE.Pack.Installed);
-
-            return INSTANCE.VersionDatabase;
+        public static string GetPackName() {
+            if (!INSTANCE.PackLoaded) return "<No Pack Loaded>";
+            return INSTANCE.Pack.Name;
         }
 
-        public static LiteDB.LiteCollection<T> FetchCollection<T>(string collectionName) {
-            LiteDB.LiteDatabase db = FetchCurrentVersion();
-            return db.GetCollection<T>(collectionName);
+        public static ModifiVersion GetInstalledVersion() {
+            return ModifiVersion.FromHash(INSTANCE.InstalledVersionString);
         }
 
-        public static void LoadVersion(string version = "1.0.0") {
-            string path = Path.Combine(Settings.ModifiDirectory, version + ".db");
-
-            UnloadVersion();
-            INSTANCE.VersionDatabase = new LiteDB.LiteDatabase(path);
-        }
-
-        internal static void UnloadVersion() {
-            if(INSTANCE.VersionDatabase != null) INSTANCE.VersionDatabase.Dispose();
-            INSTANCE.VersionDatabase = null;
-        }
-
-        #region Command Line Arguments
         /// <summary>
         /// Given a set of arguments, execute the things that need to happen.
         /// </summary>
@@ -201,11 +146,6 @@ namespace RobotGryphon.Modifi {
             LIST,
             DOWNLOAD,
             VERSIONS
-        }
-
-        public static bool CollectionExists(string collectionName) {
-            var db = FetchCurrentVersion();
-            return db.CollectionExists(collectionName);
         }
 
         private static void HandleModAction(string[] input) {
@@ -254,6 +194,9 @@ namespace RobotGryphon.Modifi {
                 }
             }
         }
-        #endregion
+
+        public void Dispose() {
+            ((IDisposable)_Version).Dispose();
+        }
     }
 }

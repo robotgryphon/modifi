@@ -6,6 +6,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using HashidsNet;
+
 namespace RobotGryphon.Modifi.Storage
 {
     public abstract class PackHelper {
@@ -23,7 +25,7 @@ namespace RobotGryphon.Modifi.Storage
 
             Pack p = new Pack();
             p.Name = packName;
-            p.Installed = "1.0.0";
+            p.Installed = ModifiVersion.VERSION_1;
             p.MinecraftVersion = version;
 
             using (StreamWriter sw = File.CreateText(Settings.PackFile)) {

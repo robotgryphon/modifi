@@ -30,13 +30,19 @@ namespace RobotGryphon.Modifi {
                 return;
             }
 
+            Console.Out.NewLine = Console.Out.NewLine + "    ";
+            Console.WriteLine();
+
             try {
                 Modifi.LoadPack();
-                Modifi.LoadVersion(Modifi.INSTANCE.Pack.Installed);
-                
-                Modifi.ExecuteArguments(input);
 
-                Modifi.UnloadVersion();
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("{0} v{1}", Modifi.GetPackName(), Modifi.GetInstalledVersion());
+
+                Console.ResetColor();
+
+                Modifi.ExecuteArguments(input);
+                Modifi.INSTANCE.Dispose();
             }
 
             catch (NotImplementedException e) {

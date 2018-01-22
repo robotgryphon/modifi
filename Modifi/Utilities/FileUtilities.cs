@@ -7,19 +7,23 @@ using System.Text;
 namespace RobotGryphon.Modifi.Utilities {
     public abstract class FileUtilities {
 
-        public static bool ChecksumMatches(string filePath, string checksum) {
-            if (!File.Exists(filePath)) return false;
+        public static string GetFileChecksum(string filePath) {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Could not load file for checksum, not found.");
 
             using (var md5 = MD5.Create()) {
                 using (var fileStream = File.OpenRead(filePath)) {
                     byte[] hash = md5.ComputeHash(fileStream);
                     string hashString = BitConverter.ToString(hash).Replace("-", String.Empty).ToLower();
-
-                    if (hashString == checksum) return true;
+                    return hashString;                    
                 }
             }
+        }
+        public static bool ChecksumMatches(string filePath, string checksum) {
+            if (!File.Exists(filePath)) return false;
 
-            return false;
+            string hashString = GetFileChecksum(filePath);
+            return hashString == checksum;
         }
     }
 }
