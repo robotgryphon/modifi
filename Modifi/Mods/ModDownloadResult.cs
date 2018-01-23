@@ -1,9 +1,11 @@
-﻿namespace RobotGryphon.Modifi.Mods {
-    public enum ModDownloadResult {
-        SUCCESS,
-        ERROR_NOT_FOUND,
-        ERROR_CONNECTION,
-        ERROR_INVALID_FILENAME,
-        ERROR_DOWNLOAD_FAILED
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace RobotGryphon.Modifi.Mods {
+
+    public struct ModDownloadResult {
+        public string Filename;
+        public string Checksum;
     }
 }

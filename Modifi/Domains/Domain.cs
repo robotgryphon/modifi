@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace RobotGryphon.Modifi.Storage {
+namespace RobotGryphon.Modifi.Domains {
 
     /// <summary>
     /// Represents a set of servers where mods can be stored at.

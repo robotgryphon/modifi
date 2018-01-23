@@ -1,33 +1,20 @@
 ﻿using Newtonsoft.Json;
 using RobotGryphon.Modifi.Domains;
-using RobotGryphon.Modifi.Storage;
+using RobotGryphon.Modifi.Packs;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi {
+namespace RobotGryphon.Modifi {   
 
-    enum ActionType {
-        MODS,
-        DOMAINS,
-        INIT,
-        PACK,
-        HELP,
-        DOWNLOAD
-    }
-
-    
-
-    public partial class Modifi : IDisposable {
+    public class Modifi : IDisposable {
 
         #region Properties
         /// <summary>
         /// The current pack in the working directory.
         /// </summary>
-        private Storage.Pack Pack;
+        private Pack Pack;
         private string InstalledVersionString;
 
         protected VersionFile _Version;
@@ -119,84 +106,12 @@ namespace RobotGryphon.Modifi {
             return ModifiVersion.FromHash(INSTANCE.InstalledVersionString);
         }
 
-        /// <summary>
-        /// Given a set of arguments, execute the things that need to happen.
-        /// </summary>
-        /// <param name="input"></param>
-        public static void ExecuteArguments(string[] input) {
-            if(input.Length == 0) throw new ArgumentException("Nothing to do");
-            
-            switch(Enum.Parse(typeof(ActionType), input[0].ToUpperInvariant())) {
-                case ActionType.MODS:
-                    HandleModAction(input);
-                    break;
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        public enum ModActions {
-            // Unknown action- leave this as first so it can be skipped in available actions
-            INVALID,
-
-            ADD,
-            REMOVE,
-            INFO,
-            LIST,
-            DOWNLOAD,
-            VERSIONS
-        }
-
-        private static void HandleModAction(string[] input) {
-            IEnumerable<string> arguments = input.Skip(1);
-            ModActions action;
-            try { action = (ModActions) Enum.Parse(typeof(ModActions), arguments.First().ToUpperInvariant()); }
-            catch(Exception) { action = ModActions.INVALID;  }
-
-            IEnumerable<string> mods = arguments.Skip(1);
-
-            foreach (string mod in mods) {
-                IDomainHandler handler = ModHelper.GetDomainHandler(mod);
-                if (handler == null)
-                    throw new Exception("That domain does not have a registered handler. Aborting.");
-
-                ModVersionStub modVersion = ModVersionStub.Create(mod);
-                switch (action) {
-
-                    case ModActions.INVALID:
-                        IEnumerable<string> actions = Enum.GetNames(typeof(ModActions)).Skip(1);
-                        Console.Error.WriteLine("Invalid mod action, choose from: {0}", String.Join(", ", actions));
-                        break;
-
-                    case ModActions.ADD:
-                        handler.HandleModAdd(modVersion);
-                        break;
-
-                    case ModActions.REMOVE:
-                        handler.HandleModRemove(modVersion);
-                        break;
-
-                    case ModActions.INFO:
-                        handler.HandleModInformation(modVersion);
-                        break;
-
-                    case ModActions.VERSIONS:
-                        handler.HandleModVersions(modVersion);
-                        break;
-
-                    case ModActions.DOWNLOAD:
-                        handler.HandleModDownload(modVersion);
-                        break;
-
-                    default:
-                        throw new Exception("Invalid mod action.");
-                }
-            }
+        internal static void ExecuteArguments(string[] input) {
+            Commands.CommandHandler.ExecuteArguments(input);
         }
 
         public void Dispose() {
-            ((IDisposable)_Version).Dispose();
+            if(_Version != null) ((IDisposable)_Version).Dispose();
         }
     }
 }

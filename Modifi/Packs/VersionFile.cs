@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace RobotGryphon.Modifi.Storage {
+namespace RobotGryphon.Modifi.Packs {
     public class VersionFile : IDisposable {
 
         protected LiteDB.LiteDatabase DatabaseFile;

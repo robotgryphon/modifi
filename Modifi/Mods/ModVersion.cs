@@ -19,5 +19,6 @@ namespace RobotGryphon.Modifi.Mods {
         /// </summary>
         /// <returns></returns>
         string GetFilename();
+        string GetChecksum();
     }
 }

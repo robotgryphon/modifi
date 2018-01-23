@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotGryphon.Modifi.Storage {
+namespace RobotGryphon.Modifi.Packs {
 
     internal class ModifiVersionHelper {
         protected const string VersionKey = "modifi-versions";

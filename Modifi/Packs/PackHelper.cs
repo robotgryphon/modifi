@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 using HashidsNet;
 
-namespace RobotGryphon.Modifi.Storage
-{
+namespace RobotGryphon.Modifi.Packs {
     public abstract class PackHelper {
 
         public static async Task<Pack> GeneratePackFile() {

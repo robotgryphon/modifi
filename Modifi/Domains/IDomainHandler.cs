@@ -6,24 +6,58 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RobotGryphon.Modifi.Domains {
+
+    public interface IDomainCommandHandler {
+
+        void HandleModAdd(string modIdentifier, string modVersion = null);
+
+        void HandleModRemove(string modIdentifier, string modVersion = null);
+
+        void HandleModInformation(string modIdentifier, string modVersion = null);
+
+        void HandleModVersions(string modIdentifier);
+
+        ModDownloadResult? HandleModDownload(string modIdentifier, string modVersion = null);
+
+        Task PerformPackDownload();
+    }
+
     public interface IDomainHandler {
 
-        void HandleModAdd(IModVersion mod);
+        /// <summary>
+        /// Fetches information about a mod.
+        /// </summary>
+        /// <param name="modIdentifier">The mod to fetch information on.</param>
+        /// <returns></returns>
+        Task<IModMetadata> GetModMetadata(string modIdentifier);
 
-        void HandleModRemove(IModVersion mod);
+        /// <summary>
+        /// Fetches a specific version of a mod from the mod's metadata.
+        /// </summary>
+        /// <param name="metadata">Mod to fetch version from.</param>
+        /// <param name="version">The version of the mod to fetch.</param>
+        /// <returns></returns>
+        Task<IModVersion> GetModVersion(IModMetadata metadata, string version);
 
-        void HandleModInformation(IModVersion mod);
+        /// <summary>
+        /// Downloads a specific version of a mod.
+        /// </summary>
+        /// <param name="version">The version to download.</param>
+        /// <returns></returns>
+        Task<ModDownloadResult> DownloadMod(IModVersion version);
 
-        void HandleModVersions(IModVersion mod);
+        /// <summary>
+        /// Gets which version of a mod is installed, if any.
+        /// </summary>
+        /// <param name="modIdentifier"></param>
+        /// <returns></returns>
+        IModVersion GetInstalledModVersion(string modIdentifier);
 
-        string GetProjectURL(IModMetadata meta);
-
-        ModDownloadResult HandleModDownload(IModVersion modVersion);
-
-        Task<IModMetadata> GetModMetadata(IModVersion version);
-
-        IModVersion GetInstalledModVersion(IModVersion version);
-
-        bool IsModInstalled(IModVersion version);
+        /// <summary>
+        /// Gets the status of a particular mod version.
+        /// </summary>
+        /// <param name="version">The version of the mod to check status on.</param>
+        /// <returns></returns>
+        ModStatus GetModStatus(IModVersion version);
     }
 }

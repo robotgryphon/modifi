@@ -1,4 +1,6 @@
 ﻿using LiteDB;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using RobotGryphon.Modifi.Mods;
 using System;
 
@@ -45,6 +47,12 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// </summary>
         public string Checksum { get; internal set; }
 
+        public ModStatus Status { get; internal set; }
+
+        string IModVersion.GetChecksum() {
+            return Checksum;
+        }
+
         IDomainHandler IModVersion.GetDomain() {
             return Modifi.GetDomainHandler("curseforge");
         }
@@ -58,7 +66,7 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         }
 
         string IModVersion.GetModVersion() {
-            return Version;
+            return FileId;
         }
     }
 }
