@@ -1,5 +1,4 @@
-﻿using RobotGryphon.Modifi.Domains;
-using RobotGryphon.Modifi.Mods;
+﻿using Modifi.Mods;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -20,19 +19,9 @@ namespace RobotGryphon.Modifi {
             return m;
         }
 
-        /// <summary>
-        /// Fetches a domain handler for a given mod stub string.
-        /// </summary>
-        /// <param name="modVersion">Mod version string, i.e. "curseforge:jei@00000000"</param>
-        /// <returns>The registered domain handler for the mod, or null.</returns>
-        public static IDomainHandler GetDomainHandler(string modVersion) {
-
-            Match m = SplitModString(modVersion);
-            string domain = m.Groups["domain"].Value.ToLowerInvariant();
-            if (Modifi.IsDomainRegistered(domain))
-                return Modifi.GetDomainHandler(domain);
-
-            return null;
+        internal static string GetDomainName(string mod) {
+            Match m = SplitModString(mod);
+            return m.Groups["domain"].Value.ToLower();
         }
 
         /// <summary>

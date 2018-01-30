@@ -32,7 +32,7 @@ namespace Modifi.Packs {
 
         public IDomain GetDomain(string id) {
             if (Domains.ContainsKey(id)) return Domains[id];
-            try {
+            if (DomainHelper.CanLoadDomain(id)) {
 
                 ConsoleColor old = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -43,10 +43,7 @@ namespace Modifi.Packs {
                 return domain;
             }
 
-            catch(Exception e) {
-                RobotGryphon.Modifi.Modifi.DefaultLogger.Error(e.Message);
-                return null;
-            }
+            return null;
         }
 
         public IEnumerable<IDomain> GetRequiredDomains() {

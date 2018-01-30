@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotGryphon.Modifi.Mods
+namespace Modifi.Mods
 {
     public enum ModReleaseType {
         Alpha,

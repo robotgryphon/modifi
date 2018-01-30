@@ -1,22 +1,20 @@
-﻿using LiteDB;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using RobotGryphon.Modifi.Mods;
 using System;
 
-namespace RobotGryphon.Modifi.Domains.CurseForge {
+using Modifi.Mods;
+using Modifi.Domains;
+
+namespace Domains.Curseforge {
     public class CurseforgeModVersion : IModVersion {
 
         public Guid Id { get; set; }
 
-        [BsonIgnore]
         public string Name { get; set; }
 
-        [BsonIgnore]
         public string Version { get; set; }
 
         [Newtonsoft.Json.JsonProperty("versions")]
-        [BsonIgnore]
         public string[] MinecraftVersions { get; set; }
 
         /// <summary>
@@ -27,7 +25,6 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
         /// <summary>
         /// The type of release the mod is.
         /// </summary>
-        [BsonIgnore]
         public ModReleaseType Type { get; set; }
 
         [Newtonsoft.Json.JsonProperty("url")]
@@ -49,12 +46,16 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         public ModStatus Status { get; internal set; }
 
-        string IModVersion.GetChecksum() {
-            return Checksum;
+        public ModReleaseType GetReleaseType() {
+            return Type;
         }
 
-        IDomainHandler IModVersion.GetDomain() {
-            return Modifi.GetDomainHandler("curseforge");
+        public string GetVersionName() {
+            return Name;
+        }
+
+        string IModVersion.GetChecksum() {
+            return Checksum;
         }
 
         string IModVersion.GetFilename() {

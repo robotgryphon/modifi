@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>RobotGryphon.Modifi.Domains</RootNamespace>
+    <AssemblyName>Modifi Domains</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modifi.Mods\Modifi Mods.csproj" />
+  </ItemGroup>
+
+</Project>

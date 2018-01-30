@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>Curseforge</AssemblyName>
+    <RootNamespace>Domains.Curseforge</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Modifi\Run\domains\curseforge</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modifi.Domains\Modifi Domains.csproj" />
+    <ProjectReference Include="..\Modifi.Mods\Modifi Mods.csproj" />
+  </ItemGroup>
+
+</Project>

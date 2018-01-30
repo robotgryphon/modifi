@@ -1,0 +1,11 @@
+﻿language: csharp
+dist: trusty
+mono: none
+dotnet: 2.0.0
+
+install:
+- dotnet restore
+
+script:
+- dotnet build
+- dotnet test RobotGryphon.Modifi.Tests/RobotGryphon.Modifi.Tests.csproj

@@ -1,14 +1,17 @@
-﻿using RobotGryphon.Modifi.Domains;
-using System;
+﻿using System;
 
-namespace RobotGryphon.Modifi.Mods {
+namespace Modifi.Mods {
 
     /// <summary>
     /// Represents a specific version of a mod.
     /// </summary>
     public interface IModVersion {
 
-        IDomainHandler GetDomain();
+        /// <summary>
+        /// Returns a version-specific name or title.
+        /// </summary>
+        /// <returns></returns>
+        string GetVersionName();
 
         string GetModIdentifier();
 
@@ -20,5 +23,8 @@ namespace RobotGryphon.Modifi.Mods {
         /// <returns></returns>
         string GetFilename();
         string GetChecksum();
+
+        ModReleaseType GetReleaseType();
+        
     }
 }

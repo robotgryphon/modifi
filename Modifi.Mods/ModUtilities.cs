@@ -4,8 +4,8 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace RobotGryphon.Modifi.Utilities {
-    public abstract class FileUtilities {
+namespace Modifi.Mods {
+    public abstract class ModUtilities {
 
         public static string GetFileChecksum(string filePath) {
             if (!File.Exists(filePath))

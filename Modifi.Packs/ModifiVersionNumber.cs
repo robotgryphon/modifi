@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotGryphon.Modifi.Packs {
+namespace Modifi.Packs {
 
     internal class ModifiVersionHelper {
         protected const string VersionKey = "modifi-versions";
@@ -13,18 +13,18 @@ namespace RobotGryphon.Modifi.Packs {
     /// <summary>
     /// Represents a pack version.
     /// </summary>
-    public struct ModifiVersion {
+    public struct ModifiVersionNumber {
         public int Major;
         public int Minor;
 
         internal static readonly string VERSION_1 = "opdckibo";
 
-        public ModifiVersion(int major = 1, int minor = 0) {
+        public ModifiVersionNumber(int major = 1, int minor = 0) {
             this.Major = major;
             this.Minor = minor;
         }
 
-        public ModifiVersion(int[] nums) : this() {
+        public ModifiVersionNumber(int[] nums) : this() {
             switch (nums.Length) {
                 case 0:
                     break;
@@ -41,7 +41,7 @@ namespace RobotGryphon.Modifi.Packs {
             }
         }
 
-        public static bool operator >(ModifiVersion a, ModifiVersion b) {
+        public static bool operator >(ModifiVersionNumber a, ModifiVersionNumber b) {
             switch (a.Major.CompareTo(b.Major)) {
                 case -1:
                 default:
@@ -55,7 +55,7 @@ namespace RobotGryphon.Modifi.Packs {
             }
         }
 
-        public static bool operator <(ModifiVersion a, ModifiVersion b) {
+        public static bool operator <(ModifiVersionNumber a, ModifiVersionNumber b) {
             switch (a.Major.CompareTo(b.Major)) {
                 case -1:
                 default:
@@ -70,8 +70,8 @@ namespace RobotGryphon.Modifi.Packs {
         }
 
         public override bool Equals(object obj) {
-            if (obj is ModifiVersion) {
-                ModifiVersion other = (ModifiVersion)obj;
+            if (obj is ModifiVersionNumber) {
+                ModifiVersionNumber other = (ModifiVersionNumber)obj;
                 return other.Major == this.Major && other.Minor == this.Minor;
             }
 
@@ -83,9 +83,9 @@ namespace RobotGryphon.Modifi.Packs {
             return ModifiVersionHelper.VersionHasher.Encode(this.Major, this.Minor, 0);
         }
 
-        public static ModifiVersion FromHash(string hash) {
+        public static ModifiVersionNumber FromHash(string hash) {
             int[] nums = ModifiVersionHelper.VersionHasher.Decode(hash);
-            return new ModifiVersion(nums);
+            return new ModifiVersionNumber(nums);
         }
 
         public override int GetHashCode() {

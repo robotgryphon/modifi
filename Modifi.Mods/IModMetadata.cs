@@ -1,11 +1,10 @@
-﻿using RobotGryphon.Modifi.Domains;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi.Mods {
+namespace Modifi.Mods {
 
     /// <summary>
     /// Represents a mod as a whole.
@@ -18,11 +17,6 @@ namespace RobotGryphon.Modifi.Mods {
         string GetName();
 
         /// <summary>
-        /// Where the mod is hosted. Typically this will be "curseforge".
-        /// </summary>
-        IDomainHandler GetDomain();
-
-        /// <summary>
         /// The mod's identifier. This is a short string, such as "jei".
         /// </summary>
         string GetModIdentifier();
@@ -30,13 +24,22 @@ namespace RobotGryphon.Modifi.Mods {
         /// <summary>
         /// Gets a description of the mod.
         /// </summary>
-        /// <returns></returns>
         string GetDescription();
 
         /// <summary>
         /// Tells whether or not the mod has a description.
         /// </summary>
-        /// <returns></returns>
         bool HasDescription();
+
+        /// <summary>
+        /// Gets the version of Minecraft this mod is running on.
+        /// </summary>
+        string GetMinecraftVersion();
+
+        /// <summary>
+        /// Gets the most recent versions of the mod.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<IModVersion> GetMostRecentVersions();
     }
 }

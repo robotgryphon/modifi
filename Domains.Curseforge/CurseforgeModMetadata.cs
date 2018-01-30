@@ -1,16 +1,17 @@
-﻿using RobotGryphon.Modifi.Mods;
+﻿using Modifi.Domains;
+using Modifi.Mods;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi.Domains.CurseForge {
+namespace Domains.Curseforge {
 
     /// <summary>
     /// Used to deserialize Curseforge API information.
     /// </summary>
-    public struct CurseforgeModMetadata : Mods.IModMetadata {
+    public struct CurseforgeModMetadata : IModMetadata {
         public int ID;
         public string Title;
         public string Description;
@@ -23,13 +24,11 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         public string ModIdentifier { get; internal set; }
 
+        public string MinecraftVersion { get; internal set; }
+
         #region IModMetadata
         string IModMetadata.GetName() {
             return Title;
-        }
-
-        IDomainHandler IModMetadata.GetDomain() {
-            return Modifi.GetDomainHandler("curseforge");
         }
 
         string IModMetadata.GetModIdentifier() {
@@ -42,6 +41,20 @@ namespace RobotGryphon.Modifi.Domains.CurseForge {
 
         bool IModMetadata.HasDescription() {
             return !String.IsNullOrWhiteSpace(Description);
+        }
+
+        public IEnumerable<IModVersion> GetMostRecentVersions() {
+            if (String.IsNullOrEmpty(this.MinecraftVersion)) 
+                throw new ArgumentException("Cannot fetch versions if the Minecraft version is not specified.");
+
+            if (Versions.ContainsKey(this.MinecraftVersion))
+                return Versions[this.MinecraftVersion];
+
+            return null;
+        }
+
+        public string GetMinecraftVersion() {
+            return MinecraftVersion;
         }
 
         #endregion

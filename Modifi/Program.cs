@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Serilog;
+using Serilog.Context;
+using System;
 using System.Threading.Tasks;
 
 // TODO: Make a disabled flag under mods
@@ -10,31 +12,22 @@ namespace RobotGryphon.Modifi {
         public static void Main(string[] args) {
 
             // Modifi.AssureLockFiles();
+            Modifi.LoadSearchPaths();
+
+            Console.WriteLine(String.Join(", ", Modifi.DomainSearchPaths));
 
             string[] input = args;
             
             #if DEBUG
-            input = new string[] { "pack", "download" };
+            input = new string[] { "mods", "versions", "curseforge:jei" };
             #endif
 
             if(input.Length < 1) {
-                Console.Error.WriteLine("Error: Not sure what to do.");
+                Modifi.DefaultLogger.Error("Not sure what to do.");
                 return;
             }
 
-            try {
-                Modifi.ExecuteArguments(input);
-                Modifi.INSTANCE.Dispose();
-            }
-
-            catch (NotImplementedException e) {
-                Console.Error.WriteLine("There was an error with your request.");
-                Console.Error.WriteLine(e.Message);
-
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("Please pass this along to the Modifi developers:");
-                Console.Error.WriteLine(e);
-            }
+            Modifi.ExecuteArguments(input);
         }
     }
 

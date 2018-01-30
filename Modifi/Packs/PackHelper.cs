@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using RobotGryphon.Modifi.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,11 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 using HashidsNet;
+using RobotGryphon.Modifi;
 
-namespace RobotGryphon.Modifi.Packs {
+namespace Modifi.Packs {
     public abstract class PackHelper {
 
         public static async Task<Pack> GeneratePackFile() {
+
+            if(File.Exists(Settings.PackFile)) {
+                throw new Exception("Pack file already exists.");
+            }
+
             Console.WriteLine("Generating new pack.");
 
             Directory.CreateDirectory(Settings.ModifiDirectory);
@@ -24,29 +29,32 @@ namespace RobotGryphon.Modifi.Packs {
 
             Pack p = new Pack();
             p.Name = packName;
-            p.Installed = ModifiVersion.VERSION_1;
+            p.Installed = ModifiVersionNumber.VERSION_1;
             p.MinecraftVersion = version;
 
+            Directory.CreateDirectory(Settings.ModifiDirectory);
             using (StreamWriter sw = File.CreateText(Settings.PackFile)) {
 
                 // Do the file work in the background, don't bother coming back to this afterwards
                 JsonSerializer s = JsonSerializer.Create(Settings.JsonSerializer);
-                await Task.Run(() => s.Serialize(sw, p))
-                    .ContinueWith(t => {
-                        TextWriter err = Console.Error;
-                        err.WriteLine("There was an error writing the pack file.");
-                        err.WriteLine("Execution will continue, but the pack might not be saved correctly.");
-                        err.WriteLine("If you see this, it is best to stop and check if you have the correct file permissions.");
+                try {
+                    s.Serialize(sw, p);
+                    Console.WriteLine("Pack file written to {0}.", Settings.PackFile);
+                }
 
-                        err.WriteLine();
-
-                        err.WriteLine(t.Exception);
-                    }, TaskContinuationOptions.OnlyOnFaulted);
-
-                Console.WriteLine("Pack file written to {0}.", Settings.PackFile);
+                catch (Exception) {
+                    TextWriter err = Console.Error;
+                    err.WriteLine("There was an error writing the pack file.");
+                    err.WriteLine("Execution will continue, but the pack might not be saved correctly.");
+                    err.WriteLine("If you see this, it is best to stop and check if you have the correct file permissions.");
+                }   
             }
 
             return p;
+        }
+
+        public static bool PackExists() {
+            return File.Exists(Settings.PackFile);
         }
     }
 }

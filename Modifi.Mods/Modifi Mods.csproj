@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>RobotGryphon.Modifi.Mods</RootNamespace>
+    <AssemblyName>Modifi Mods</AssemblyName>
+  </PropertyGroup>
+
+</Project>
