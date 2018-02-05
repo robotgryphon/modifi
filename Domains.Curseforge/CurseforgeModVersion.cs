@@ -6,9 +6,7 @@ using Modifi.Mods;
 using Modifi.Domains;
 
 namespace Domains.Curseforge {
-    public class CurseforgeModVersion : IModVersion {
-
-        public Guid Id { get; set; }
+    public class CurseforgeModVersion : ModVersion {
 
         public string Name { get; set; }
 
@@ -34,40 +32,28 @@ namespace Domains.Curseforge {
         public string FileId { get; set; }
 
         /// <summary>
-        /// Mod identifier (i.e. jei)
-        /// </summary>
-        public string ModIdentifier { get; internal set; }
-
-
-        /// <summary>
         /// An MD5 hash of the file to ensure it downloaded correctly.
         /// </summary>
         public string Checksum { get; internal set; }
 
-        public ModStatus Status { get; internal set; }
-
-        public ModReleaseType GetReleaseType() {
+        public override ModReleaseType GetReleaseType() {
             return Type;
         }
 
-        public string GetVersionName() {
+        public override string GetVersionName() {
             return Name;
         }
 
-        string IModVersion.GetChecksum() {
-            return Checksum;
+        public override string GetModVersion() {
+            return FileId;
         }
 
-        string IModVersion.GetFilename() {
+        public override string GetFilename() {
             return Filename;
         }
 
-        string IModVersion.GetModIdentifier() {
-            return ModIdentifier;
-        }
-
-        string IModVersion.GetModVersion() {
-            return FileId;
+        public override string GetChecksum() {
+            return Checksum;
         }
     }
 }

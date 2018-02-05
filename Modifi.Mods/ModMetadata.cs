@@ -9,37 +9,38 @@ namespace Modifi.Mods {
     /// <summary>
     /// Represents a mod as a whole.
     /// </summary>
-    public interface IModMetadata {
+    public abstract class ModMetadata {
+
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Name of the mod. Actually used for display.
         /// </summary>
-        string GetName();
+        public abstract string GetName();
 
         /// <summary>
         /// The mod's identifier. This is a short string, such as "jei".
         /// </summary>
-        string GetModIdentifier();
+        public abstract string GetModIdentifier();
 
         /// <summary>
         /// Gets a description of the mod.
         /// </summary>
-        string GetDescription();
+        public abstract string GetDescription();
 
         /// <summary>
         /// Tells whether or not the mod has a description.
         /// </summary>
-        bool HasDescription();
+        public abstract bool HasDescription();
 
         /// <summary>
         /// Gets the version of Minecraft this mod is running on.
         /// </summary>
-        string GetMinecraftVersion();
+        public abstract string GetMinecraftVersion();
 
-        /// <summary>
-        /// Gets the most recent versions of the mod.
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<IModVersion> GetMostRecentVersions();
+        public ModMetadata() {
+            this.Id = Guid.NewGuid();
+        }
+
     }
 }

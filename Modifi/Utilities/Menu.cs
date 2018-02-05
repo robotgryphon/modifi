@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotGryphon.Modifi {
+namespace Modifi {
 
     public class MenuOption<T> {
         public T Item;

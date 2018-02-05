@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi.Commands {
+namespace Modifi.Commands {
     internal class CommandHandler {
 
         enum ActionType {

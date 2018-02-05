@@ -1,6 +1,7 @@
 ﻿using Modifi.Packs;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
 
-namespace RobotGryphon.Modifi {
+namespace Modifi {
 
     public class Modifi {
 
@@ -26,6 +27,18 @@ namespace RobotGryphon.Modifi {
         public static IEnumerable<string> DomainSearchPaths {
             get;
             protected set;
+        }
+
+        public static bool DEBUG_MODE {
+            get {
+                #if DEBUG
+                return true;
+                #else
+                return false;
+                #endif
+            }
+
+            private set { }
         }
 
         public static void LoadSearchPaths() {
@@ -53,9 +66,22 @@ namespace RobotGryphon.Modifi {
             DomainSearchPaths = searchPaths;
         }
 
-        public static ILogger DefaultLogger = new LoggerConfiguration()
-            .WriteTo.Console(outputTemplate: "{Message}{NewLine}", theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
-            .CreateLogger();
+        public static ILogger DefaultLogger = GenerateDefaultLogger();
+
+        private static ILogger GenerateDefaultLogger() {
+            string template = "{Message}{NewLine}";
+            
+            if(Modifi.DEBUG_MODE)
+                template = "[{Level}] " + template;
+
+            LoggerConfiguration c = new LoggerConfiguration()
+                .WriteTo.Console(outputTemplate: template, theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code);
+
+            if(Modifi.DEBUG_MODE)
+                c.MinimumLevel.Debug();
+
+            return c.CreateLogger();
+        }
 
         public static Serilog.ILogger CreateLogger(string id) {
             ILogger log = new LoggerConfiguration()

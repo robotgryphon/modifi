@@ -3,7 +3,7 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
 
-namespace RobotGryphon.Modifi {
+namespace Modifi {
     public class Settings {
         public static string ModPath = Path.Combine(Environment.CurrentDirectory, "mods");
 

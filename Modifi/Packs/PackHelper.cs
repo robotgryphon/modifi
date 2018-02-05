@@ -6,12 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 using HashidsNet;
-using RobotGryphon.Modifi;
+using Modifi;
 
 namespace Modifi.Packs {
     public abstract class PackHelper {
 
-        public static async Task<Pack> GeneratePackFile() {
+        public static Task<Pack> GeneratePackFile() {
 
             if(File.Exists(Settings.PackFile)) {
                 throw new Exception("Pack file already exists.");
@@ -50,7 +50,7 @@ namespace Modifi.Packs {
                 }   
             }
 
-            return p;
+            return Task.FromResult(p);
         }
 
         public static bool PackExists() {

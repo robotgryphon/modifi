@@ -1,5 +1,6 @@
 ﻿using Modifi.Domains;
 using Modifi.Mods;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,53 +12,61 @@ namespace Domains.Curseforge {
     /// <summary>
     /// Used to deserialize Curseforge API information.
     /// </summary>
-    public struct CurseforgeModMetadata : IModMetadata {
-        public int ID;
-        public string Title;
-        public string Description;
+    public class CurseforgeModMetadata : ModMetadata {
+
+        #region Properties and Fields
+        /// <summary>
+        /// Curseforge Project identifier.
+        /// </summary>
+        [JsonProperty("id")]
+        public int ProjectId { get; protected set; }
+
+        /// <summary>
+        /// The name of the mod on Curseforge.
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// Project description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// All the available versions for the mod.
+        /// </summary>
         public Dictionary<String, IEnumerable<CurseforgeModVersion>> Versions;
 
-        [Newtonsoft.Json.JsonProperty("download")]
+        [JsonProperty("download")]
         public CurseforgeModVersion RequestedVersion;
 
-        public CurseForgeURLs URLs;
+        public CurseForgeURLs URLs { get; internal set; }
 
         public string ModIdentifier { get; internal set; }
 
         public string MinecraftVersion { get; internal set; }
+        #endregion
 
-        #region IModMetadata
-        string IModMetadata.GetName() {
+        public CurseforgeModMetadata() : base() { }
+
+        public override string GetName() {
             return Title;
         }
 
-        string IModMetadata.GetModIdentifier() {
+        public override string GetModIdentifier() {
             return ModIdentifier;
         }
 
-        string IModMetadata.GetDescription() {
+        public override string GetDescription() {
             return Description;
         }
 
-        bool IModMetadata.HasDescription() {
+        public override bool HasDescription() {
             return !String.IsNullOrWhiteSpace(Description);
         }
 
-        public IEnumerable<IModVersion> GetMostRecentVersions() {
-            if (String.IsNullOrEmpty(this.MinecraftVersion)) 
-                throw new ArgumentException("Cannot fetch versions if the Minecraft version is not specified.");
-
-            if (Versions.ContainsKey(this.MinecraftVersion))
-                return Versions[this.MinecraftVersion];
-
-            return null;
-        }
-
-        public string GetMinecraftVersion() {
+        public override string GetMinecraftVersion() {
             return MinecraftVersion;
         }
-
-        #endregion
     }
 
     public struct CurseForgeURLs {

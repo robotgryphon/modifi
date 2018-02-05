@@ -36,7 +36,7 @@ namespace Modifi.Packs {
 
                 ConsoleColor old = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("Domain {0} not loaded, loading it now.", id);
+                Modifi.DefaultLogger.Information("Domain {0:l} not loaded, loading it now.", id);
                 Console.ForegroundColor = old;
 
                 IDomain domain = DomainHelper.LoadDomain(this, id);
@@ -44,7 +44,7 @@ namespace Modifi.Packs {
             }
 
             catch(Exception e) {
-                RobotGryphon.Modifi.Modifi.DefaultLogger.Error(e.Message);
+                Modifi.DefaultLogger.Error(e.Message);
                 return null;
             }
         }

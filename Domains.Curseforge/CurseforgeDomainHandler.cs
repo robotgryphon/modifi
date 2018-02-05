@@ -29,7 +29,7 @@ namespace Domains.Curseforge {
         /// </summary>
         public const string INSTALLED_MODS_COLLECTION = "curseforge";
 
-        public async Task<IModMetadata> GetModMetadata(string minecraftVersion, string modIdentifier) {
+        public async Task<ModMetadata> GetModMetadata(string minecraftVersion, string modIdentifier) {
             Uri api = new Uri(String.Format("{0}/{1}", CurseforgeDomainHandler.ApiURL, modIdentifier));
 
             // if (!String.IsNullOrEmpty(modVersion)) 
@@ -48,7 +48,6 @@ namespace Domains.Curseforge {
 
                 CurseforgeModMetadata modInfo = JsonConvert.DeserializeObject<CurseforgeModMetadata>(modData);
                 modInfo.ModIdentifier = modIdentifier;
-                modInfo.RequestedVersion.ModIdentifier = modIdentifier;
                 modInfo.MinecraftVersion = minecraftVersion;
 
                 resp.Close();
@@ -73,25 +72,25 @@ namespace Domains.Curseforge {
             return null;
         }
 
-        public Task<IModVersion> GetModVersion(IModMetadata metadata, string version) {
+        public Task<ModVersion> GetModVersion(ModMetadata metadata, string version) {
             if (metadata == null) {
                 throw new Exception("Metadata is not defined; cannot get mod versions with it.");
             }
 
-            if (metadata is CurseforgeModMetadata) {
-                CurseforgeModMetadata meta = (CurseforgeModMetadata)metadata;
-                IEnumerable<CurseforgeModVersion> versions = meta.GetMostRecentVersions() as IEnumerable<CurseforgeModVersion>;
+            if (!(metadata is CurseforgeModMetadata))
+                throw new Exception("Metadata needs to be a curseforge metadata object.");
 
-                IModVersion versionMeta;
-                if (version == null)
-                    versionMeta = versions.First();
-                else
-                    versionMeta = versions.First(v => v.FileId == version);
+            CurseforgeModMetadata cfMeta = metadata as CurseforgeModMetadata;
 
-                return Task.FromResult(versionMeta);
-            } else {
-                throw new FormatException("Metadata is not of the Curseforge type");
-            }
+            bool hasVersion = cfMeta.Versions.ContainsKey(cfMeta.MinecraftVersion);
+            if (!hasVersion)
+                throw new Exception("Mod does not have versions for the requested Minecraft version.");
+
+            IEnumerable<ModVersion> versions = cfMeta.Versions[cfMeta.MinecraftVersion];
+            if (version == null) return Task.FromResult(versions.First());
+
+            ModVersion mv = versions.First(v => v.GetModVersion() == version);
+            return Task.FromResult(mv);
         }
 
         /// <summary>
@@ -100,7 +99,7 @@ namespace Domains.Curseforge {
         /// <exception cref="ModDownloadException"></exception>
         /// <exception cref="IOException"></exception>
         /// <returns></returns>
-        public async Task<ModDownloadResult> DownloadMod(IModVersion version, string directory) {
+        public async Task<ModDownloadResult> DownloadMod(ModVersion version, string directory) {
 
             CurseforgeModVersion versionInfo;
             if (version is CurseforgeModVersion)
@@ -162,103 +161,37 @@ namespace Domains.Curseforge {
             #endregion
         }
 
-        //public void ChangeModStatus(IModVersion versionInfo, ModStatus status) {
-
-        //    Pack pack = Modifi.DefaultPack;
-        //    using (ModifiVersion version = pack.GetInstalledVersion()) {
-        //        LiteDB.LiteCollection<CurseforgeModVersion> versions = version.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
-
-        //        if (!(versionInfo is CurseforgeModVersion))
-        //            throw new Exception("Tried to change status of a non-curseforge mod.");
-
-        //        // Remove existing version and replace it with the new version information
-        //        CurseforgeModVersion oldVersion = versions.FindOne(x => x.ModIdentifier == versionInfo.GetModIdentifier());
-
-        //        if (oldVersion == null) oldVersion = versionInfo as CurseforgeModVersion;
-        //        oldVersion.Status = status;
-
-        //        versions.Upsert(oldVersion);
-        //    }
-        //}
-
-        public Task<IEnumerable<IModVersion>> GetRecentVersions(IModMetadata meta, int count = 5, ModReleaseType releaseType = ModReleaseType.Any) {
+        public Task<IEnumerable<ModVersion>> GetRecentVersions(ModMetadata meta, int count = 5, ModReleaseType releaseType = ModReleaseType.Any) {
             if (!(meta is CurseforgeModMetadata))
                 throw new Exception("Metadata is not of Curseforge's type. Cannot fetch mod versions with this.");
 
             CurseforgeModMetadata metaCF = (CurseforgeModMetadata)meta;
-            IEnumerable<IModVersion> versions = metaCF.GetMostRecentVersions();
+            if (String.IsNullOrEmpty(metaCF.MinecraftVersion))
+                throw new Exception("Minecraft version was not set on metadata, cannot properly fetch versions.");
+
+            if (!metaCF.Versions.ContainsKey(metaCF.MinecraftVersion))
+                return null;
+
+            IEnumerable<ModVersion> versions = metaCF.Versions[metaCF.MinecraftVersion];
 
             if(releaseType != ModReleaseType.Any) {
                 versions = versions.Where(v => v.GetReleaseType() == releaseType);
             }
 
-            IEnumerable<IModVersion> limitedList = versions.Take(count);
+            IEnumerable<ModVersion> limitedList = versions.Take(count);
+            foreach(ModVersion mv in limitedList)
+                mv.MetadataId = meta.Id;
+
             return Task.FromResult(limitedList);
         }
 
-        public Task<IModVersion> GetLatestVersion(IModMetadata meta, ModReleaseType releaseType = ModReleaseType.Any) {
+        public Task<ModVersion> GetLatestVersion(ModMetadata meta, ModReleaseType releaseType = ModReleaseType.Any) {
             if (!(meta is CurseforgeModMetadata))
                 throw new Exception("Metadata is not of Curseforge's type. Cannot fetch mod versions with this.");
 
-            IEnumerable<IModVersion> versions = GetRecentVersions(meta, 1, releaseType).Result;
+            IEnumerable<ModVersion> versions = GetRecentVersions(meta, 1, releaseType).Result;
 
             return Task.FromResult(versions.First());
         }
-
-        //public ModStatus GetModStatus(IModVersion mod) {
-
-        //    Pack pack = Modifi.DefaultPack;
-        //    using (ModifiVersion version = pack.GetInstalledVersion()) {
-        //        if (!version.CollectionExists(INSTALLED_MODS_COLLECTION)) return ModStatus.NotInstalled;
-
-        //        LiteDB.LiteCollection<CurseforgeModVersion> versions = version.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
-
-        //        CurseforgeModVersion modVersion = versions.FindOne(x =>
-        //            (x.ModIdentifier == mod.GetModIdentifier()) &&
-        //            (x.FileId == mod.GetModVersion())
-        //        );
-
-        //        if (modVersion == null) return ModStatus.NotInstalled;
-
-        //        if (String.IsNullOrEmpty(modVersion.Filename)) return ModStatus.Requested;
-
-        //        // Mod is supposedly installed, check if checksum matches
-        //        string installPath = Path.Combine(Settings.ModPath, modVersion.Filename);
-
-        //        bool csMatch = ModUtilities.ChecksumMatches(installPath, modVersion.Checksum);
-        //        if (csMatch) {
-        //            // File already downloaded, checksum matched
-        //            return ModStatus.Installed;
-        //        } else {
-        //            // File checksum did not match, delete it and set filename to null in database
-        //            File.Delete(installPath);
-        //            modVersion.Filename = null;
-        //            versions.Update(modVersion);
-        //            return ModStatus.Requested;
-        //        }
-        //    }
-        //}
-
-        //public IModVersion GetInstalledModVersion(string modIdentifier) {
-        //    Pack pack = Modifi.DefaultPack;
-        //    using (ModifiVersion version = pack.GetInstalledVersion()) {
-        //        LiteDB.LiteCollection<CurseforgeModVersion> versions = version.FetchCollection<CurseforgeModVersion>(INSTALLED_MODS_COLLECTION);
-        //        return versions.FindOne(x => x.ModIdentifier == modIdentifier);
-        //    }
-        //}
-
-        //public Task<IModVersion> GetMostRecentModVersion(IModMetadata meta, ModReleaseType releaseType = ModReleaseType.Any) {
-        //    if(meta is CurseforgeModMetadata) {
-        //        CurseforgeModMetadata metadata = (CurseforgeModMetadata) meta;
-        //        IEnumerable<CurseforgeModVersion> versions = metadata.Versions[Modifi.DefaultPack.MinecraftVersion];
-
-        //        if (releaseType == ModReleaseType.Any)
-        //            return Task.FromResult<IModVersion>(versions.First());
-        //        else
-        //            return Task.FromResult<IModVersion>(versions.First(mv => mv.Type == releaseType));
-        //    } else {
-        //        throw new FormatException("Meta needs to be of type CurseforgeModMetadata.");
-        //    }
-        //}
     }
 }

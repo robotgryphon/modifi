@@ -1,13 +1,16 @@
 ﻿using Modifi.Domains;
 using Modifi.Mods;
 using Modifi.Packs;
+using Modifi.Storage;
+using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi.Commands {
+namespace Modifi.Commands {
 
     public class ModCommandHandler {
         public enum ModActions {
@@ -32,10 +35,10 @@ namespace RobotGryphon.Modifi.Commands {
                 string domainName = ModHelper.GetDomainName(mod);
                 IDomain handler = pack.GetDomain(domainName);
 
-                if (handler == null || !(handler is IDomain))
-                    throw new Exception("That domain does not have a registered handler. Aborting.");
-
-                // TODO: Generic
+                if (handler == null || !(handler is IDomain)) {
+                    Modifi.DefaultLogger.Error("No domain handler found for {0}. Aborting.", domainName);
+                    return;
+                }
 
                 string modIdentifier = ModHelper.GetModIdentifier(mod);
                 string modVersion = ModHelper.GetModVersion(mod);
@@ -46,11 +49,11 @@ namespace RobotGryphon.Modifi.Commands {
                         break;
 
                     case ModActions.REMOVE:
-                        // commandHandler.HandleModRemove(handler, modIdentifier, modVersion);
+                        HandleModRemove(handler, modIdentifier);
                         break;
 
                     case ModActions.INFO:
-                        // commandHandler.HandleModInformation(handler, modIdentifier, modVersion);
+                        HandleModInformation(handler, modIdentifier, modVersion);
                         break;
 
                     case ModActions.VERSIONS:
@@ -58,7 +61,7 @@ namespace RobotGryphon.Modifi.Commands {
                         break;
 
                     case ModActions.DOWNLOAD:
-                        // Do mod download, do not add to storage
+                        HandleModDownload(handler, modIdentifier, modVersion);
                         break;
 
                     default:
@@ -69,15 +72,20 @@ namespace RobotGryphon.Modifi.Commands {
 
         }
 
+        /// <summary>
+        /// Handles the mods versions {modid} command.
+        /// </summary>
+        /// <param name="domain">Domain handler to use for lookup.</param>
+        /// <param name="modIdentifier">Mod to lookup versions for.</param>
         public static void HandleModVersions(IDomain domain, string modIdentifier) {
             IDomainHandler handler = domain.GetDomainHandler();
 
-            IModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+            ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
 
-            IEnumerable<IModVersion> latestVersions = handler.GetRecentVersions(meta).Result;
+            IEnumerable<ModVersion> latestVersions = handler.GetRecentVersions(meta).Result;
 
             // ModHelper.PrintModInformation(meta);
-            foreach (IModVersion version in latestVersions) {
+            foreach (ModVersion version in latestVersions) {
                 Console.Write("[");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write(version.GetModVersion());
@@ -85,7 +93,7 @@ namespace RobotGryphon.Modifi.Commands {
                 Console.Write("] ");
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write(version.GetModIdentifier());
+                Console.Write(version.GetVersionName());
 
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(" (");
@@ -101,29 +109,45 @@ namespace RobotGryphon.Modifi.Commands {
         public static void HandleModAdd(IDomain domain, string modIdentifier, string modVersion = null) {
 
             IDomainHandler handler = domain.GetDomainHandler();
+            ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
 
-            // TODO: IModVersion installed = handler.GetInstalledModVersion(modIdentifier);
-            //if (installed != null) {
-            //    Console.Error.WriteLine("> Error: Mod \"{0}\" is already added to the pack. Please use the upgrade command instead.", installed.GetModIdentifier());
-            //    return;
-            //}
+            // Check mod installation status, error out if already requested/installed
+            using (IModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain)) {
+                try {
+                    ModStatus status = storage.GetModStatus(meta);
+                    switch (status) {
+                        case ModStatus.Requested:
+                        case ModStatus.Installed:
+                            Modifi.DefaultLogger.Error("Mod {0} is already marked as requested, or already installed.", meta.GetName());
+                            return;
 
-            IModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+                        case ModStatus.Disabled:
+                            Modifi.DefaultLogger.Information("Mod {0} is marked at disabled. Please either delete it, or re-enable it.");
+                            return;
+                    }
+                }
+
+                catch(Exception e) {
+                    Modifi.DefaultLogger.Error(e.Message);
+                    return;
+                }
+            }
 
             // If the version is already specified, don't ask, just add it
-            // TODO: Abstract to Storage
-            //if (!String.IsNullOrEmpty(modVersion)) {
-            //    IModVersion versionMeta = handler.GetModVersion(meta, modVersion).Result;
-            //    if (versionMeta != null) {
-            //        (domain.GetDomainHandler() as CurseforgeDomainHandler).ChangeModStatus(versionMeta, ModStatus.Requested);
-            //        return;
-            //    }
-            //}
+            if (!String.IsNullOrEmpty(modVersion)) {
+                ModVersion v = handler.GetModVersion(meta, modVersion).Result;
+
+                // Connect to storage and mark the mod as requested
+                using (ModStorage storage = new ModStorage(Modifi.DefaultPack.MinecraftVersion, domain)) {
+                    storage.MarkRequested(meta, v);
+                    return;
+                }
+            }
 
             // ============================================================
             // TODO: ModHelper.PrintModInformation(meta);
 
-            Menu<IModVersion> menu = new Menu<IModVersion>();
+            Menu<ModVersion> menu = new Menu<ModVersion>();
 
             menu.OptionFormatter = (opt) => {
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -140,18 +164,17 @@ namespace RobotGryphon.Modifi.Commands {
                 Console.WriteLine();
             };
 
-            IModVersion latestRelease = handler.GetRecentVersions(meta, 1, ModReleaseType.Release).Result.First();
-            IModVersion latestVersion = handler.GetRecentVersions(meta, 1, ModReleaseType.Any).Result.First();
+            ModVersion latestRelease = handler.GetRecentVersions(meta, 1, ModReleaseType.Release).Result.First();
+            ModVersion latestVersion = handler.GetRecentVersions(meta, 1, ModReleaseType.Any).Result.First();
 
-            IEnumerable<IModVersion> versions = meta.GetMostRecentVersions().Skip(1);
-                // ((CurseforgeModMetadata)meta).Versions[Modifi.DefaultPack.MinecraftVersion].Skip(1);
+            IEnumerable<ModVersion> versions = handler.GetRecentVersions(meta, 6, ModReleaseType.Any).Result.Skip(1);
 
             menu.AddItem(latestRelease);
             if (latestVersion.GetModVersion() != latestRelease.GetModVersion())
                 menu.AddItem(latestVersion);
 
             menu.AddSpacer();
-            foreach (IModVersion v in versions.Take(5)) menu.AddItem(v);
+            foreach (ModVersion v in versions.Take(5)) menu.AddItem(v);
 
 
             menu.DrawMenu();
@@ -159,100 +182,101 @@ namespace RobotGryphon.Modifi.Commands {
             Console.ResetColor();
 
             Console.WriteLine();
-            IModVersion version = menu.SelectedOption;
+            ModVersion version = menu.SelectedOption;
             Console.WriteLine("Selected Version: " + version.GetModVersion());
 
-            // TODO: handler.ChangeModStatus(version, ModStatus.Requested);
+            // Create a storage handler for the domain and mark the version as requested
+            using (ModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain)) {
+                storage.MarkRequested(meta, version);
+            }
         }
 
-        //public void HandleModRemove(IDomain domain, string modIdentifier, string modVersion = null) {
-        //    CurseforgeDomainHandler handler = domain.GetDomainHandler() as CurseforgeDomainHandler;
-        //    IModVersion modInformation = handler.GetInstalledModVersion(modIdentifier);
-        //    if (modInformation == null) {
-        //        Console.WriteLine("Error: Cannot uninstall mod; it is not installed.");
-        //        return;
-        //    }
+        public static void HandleModRemove(IDomain domain, string modIdentifier) {
+            IDomainHandler handler = domain.GetDomainHandler();
+            ModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain);
 
-        //    ModStatus status = handler.GetModStatus(modInformation);
+            ModMetadata meta = storage.GetMetadata(modIdentifier);
+            if(meta == null) {
+                Modifi.DefaultLogger.Error("Cannot uninstall {0}; it is not installed.", modIdentifier);
+                return;
+            }
 
-        //    using (Pack pack = Modifi.DefaultPack) {
-        //        using (ModifiVersion version = Modifi.LoadVersion(pack.Installed)) {
-        //            var mods = version.FetchCollection<CurseforgeModVersion>(domain.GetDomainIdentifier());
+            ModVersion installed = storage.GetMod(meta);
+            ModStatus status = storage.GetModStatus(meta);
 
-        //            switch (status) {
-        //                case ModStatus.NotInstalled:
-        //                    break;
+            switch(status) {
+                case ModStatus.NotInstalled:
+                    Modifi.DefaultLogger.Error("Cannot uninstall {0}; it is not installed.", meta.GetName());
+                    return;
 
-        //                case ModStatus.Requested:
-        //                    // Mod has not been downloaded yet, just delete the entry
-        //                    mods.Delete(x => x.ModIdentifier == modInformation.GetModIdentifier());
-        //                    break;
+                case ModStatus.Requested:
+                    Modifi.DefaultLogger.Information("Removing {0}...", meta.GetName());
+                    storage.Delete(meta);
+                    Modifi.DefaultLogger.Information("Done.");
+                    return;
 
-        //                case ModStatus.Installed:
-        //                    string filename = modInformation.GetFilename();
-        //                    string actualFilename = Path.Combine(Settings.ModPath, filename);
+                case ModStatus.Installed:
+                    Modifi.DefaultLogger.Information("Removing {0} and deleting files...", meta.GetName());
+                    storage.Delete(meta);
+                    string filePath = Path.Combine(Settings.ModPath, installed.GetFilename());
+                    bool correctChecksum = ModUtilities.ChecksumMatches(filePath, installed.GetChecksum());
+                    if (correctChecksum) {
+                        try {
+                            File.Delete(filePath);
+                        }
 
-        //                    bool correctChecksum = FileUtilities.ChecksumMatches(actualFilename, modInformation.GetChecksum());
-        //                    if (correctChecksum) {
-        //                        try {
-        //                            File.Delete(actualFilename);
-        //                            mods.Delete(x => x.ModIdentifier == modInformation.GetModIdentifier());
-        //                        }
+                        catch (Exception e) {
+                            Modifi.DefaultLogger.Error("Error deleting {0}, please delete it manually.", filePath);
+                            Modifi.DefaultLogger.Error(e.Message);
+                        }
+                    } else {
+                        Modifi.DefaultLogger.Information("File for {0} found at {1}, but the checksum did not match. Delete?", meta.GetName(), filePath);
+                        Menu<string> delete = new Menu<string>();
+                        delete.AddItem("Delete");
+                        delete.AddItem("Leave");
 
-        //                        catch (Exception e) {
-        //                            Console.Error.WriteLine("Error deleting {0}, please delete it manually.", actualFilename);
-        //                            Console.Error.WriteLine(e.Message);
-        //                        }
-        //                    } else {
-        //                        Console.WriteLine("File for {0} found at {1}, but the checksum did not match. Delete?", modInformation.GetModIdentifier(), actualFilename);
-        //                        Menu<string> delete = new Menu<string>();
-        //                        delete.AddItem("Delete");
-        //                        delete.AddItem("Leave");
+                        delete.DrawMenu();
+                        switch (delete.SelectedOption.ToLower()) {
+                            case "delete":
+                                File.Delete(filePath);
+                                Modifi.DefaultLogger.Information("File deleted.");
+                                break;
 
-        //                        delete.DrawMenu();
-        //                        switch (delete.SelectedOption.ToLower()) {
-        //                            case "delete":
-        //                                Console.WriteLine("Deleting file.");
-        //                                File.Delete(actualFilename);
-        //                                break;
+                            case "leave":
+                                Modifi.DefaultLogger.Information("File left in place.");
+                                break;
+                        }
+                    }
 
-        //                            case "leave":
-        //                                Console.WriteLine("Leaving file in place.");
-        //                                break;
-        //                        }
-        //                    }
+                    break;
+            }
 
-        //                    break;
-        //            }
-        //        }
-        //    }
-        //}
+            storage.Dispose();
+        }
 
-        //public void HandleModInformation(IDomain domain, string modIdentifier, string modVersion = null) {
-        //    IModMetadata meta = domain.GetDomainHandler().GetModMetadata(modIdentifier).Result;
+        public static void HandleModInformation(IDomain domain, string modIdentifier, string modVersion = null) {
+            ModMetadata meta = domain.GetDomainHandler().GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
 
-        //    if (domain is CurseforgeDomain) {
-        //        CurseforgeDomain d = domain as CurseforgeDomain;
-        //        ILogger log = d.Logger;
+            ILogger log = Modifi.DefaultLogger;
 
-        //        log.Information(meta.GetName());
-        //        if (meta.HasDescription()) log.Information(meta.GetDescription());
-        //    }
-        //}
+            log.Information(meta.GetName());
+            if (meta.HasDescription())
+                log.Information(meta.GetDescription());
+        }
 
-        //public ModDownloadResult? HandleModDownload(IDomain domain, string modIdentifier, string modVersion = null) {
+        public static ModDownloadResult? HandleModDownload(IDomain domain, string modIdentifier, string modVersion = null) {
 
-        //    CurseforgeDomainHandler handler = domain.GetDomainHandler() as CurseforgeDomainHandler;
+            IDomainHandler handler = domain.GetDomainHandler();
 
-        //    // Fetch the mod version information from the Curseforge API
-        //    try {
-        //        IModMetadata meta = handler.GetModMetadata(modIdentifier).Result;
-        //        IModVersion mod = handler.GetModVersion(meta, modVersion).Result;
+            // Fetch the mod version information from the Curseforge API
+            try {
+                ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+                ModVersion mod = handler.GetModVersion(meta, modVersion).Result;
 
-        //        return handler.DownloadMod(mod).Result;
-        //    }
+                return handler.DownloadMod(mod, Settings.ModPath).Result;
+            }
 
-        //    catch (Exception) { return null; }
-        //}
+            catch (Exception) { return null; }
+        }
     }
 }

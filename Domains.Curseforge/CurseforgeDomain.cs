@@ -1,4 +1,5 @@
-﻿using Modifi.Domains;
+﻿using System;
+using Modifi.Domains;
 
 namespace Domains.Curseforge {
     public class CurseforgeDomain : IDomain {
@@ -15,6 +16,14 @@ namespace Domains.Curseforge {
 
         public string GetDomainIdentifier() {
             return "curseforge";
+        }
+
+        public Type GetMetadataType() {
+            return typeof(CurseforgeModMetadata);
+        }
+
+        public Type GetVersionType() {
+            return typeof(CurseforgeModVersion);
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RobotGryphon.Modifi {
+namespace Modifi {
     public abstract class ModHelper {
 
         public static Regex MOD_VERSION_REGEX = new Regex(@"(?<domain>[\w]+):(?<modid>[\w_\-]+)(@(?<version>[\d]+))?");
@@ -28,7 +28,7 @@ namespace RobotGryphon.Modifi {
         /// Prints out some mod information in a standardized manner.
         /// </summary>
         /// <param name="meta"></param>
-        public static void PrintModInformation(IModMetadata meta, bool header = false) {
+        public static void PrintModInformation(ModMetadata meta, bool header = false) {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
             Console.WriteLine(meta.GetName());

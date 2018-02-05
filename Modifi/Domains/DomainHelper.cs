@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.Loader;
 using System.Reflection;
 using System.Linq;
-using RobotGryphon.Modifi;
+using Modifi;
 using Modifi.Packs;
 
 namespace Modifi.Domains {
@@ -22,10 +22,13 @@ namespace Modifi.Domains {
             bool domainFound = false;
             string domainPath = null;
 
-            foreach (string path in RobotGryphon.Modifi.Modifi.DomainSearchPaths) {
+            if (Modifi.DomainSearchPaths == null)
+                Modifi.LoadSearchPaths();
+
+            foreach (string path in Modifi.DomainSearchPaths) {
                 string pathCheck = Path.Combine(path, domain + ".dll");
 
-                RobotGryphon.Modifi.Modifi.DefaultLogger.Information("Trying to load domain handler from {0}...", pathCheck);
+                Modifi.DefaultLogger.Debug("Trying to load domain handler from {0}...", pathCheck);
                 if(File.Exists(pathCheck)) {
                     domainPath = pathCheck;
                     domainFound = true;
@@ -43,10 +46,18 @@ namespace Modifi.Domains {
                 throw new Exception("Cannot find the domain handler inside domain assembly.");
             }
 
-            IDomain domainInstance = Activator.CreateInstance(controller) as IDomain;
-            pack.Domains.Add(domain, domainInstance);
+            try {
+                IDomain domainInstance = Activator.CreateInstance(controller) as IDomain;
+                pack.Domains.Add(domain, domainInstance);
+                return domainInstance;
+            }
 
-            return domainInstance;
+            catch(Exception e) {
+                Modifi.DefaultLogger.Error("Error loading domain handler from {0}:", domainPath);
+                Modifi.DefaultLogger.Error(e.Message);
+                return null;
+            }
+            
         }
     }
 }

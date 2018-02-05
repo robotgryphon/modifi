@@ -1,25 +1,28 @@
-﻿using Serilog;
+﻿using Modifi.Domains;
+using Modifi.Mods;
+using Modifi.Packs;
+using Modifi.Storage;
+using Serilog;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 // TODO: Make a disabled flag under mods
 
-namespace RobotGryphon.Modifi {
+namespace Modifi {
 
     public class Program {
 
         public static void Main(string[] args) {
 
             // Modifi.AssureLockFiles();
-            Modifi.LoadSearchPaths();
-
-            Console.WriteLine(String.Join(", ", Modifi.DomainSearchPaths));
+            // Modifi.LoadSearchPaths();
 
             string[] input = args;
             
             #if DEBUG
-            input = new string[] { "mods", "versions", "curseforge:jei" };
+            input = new string[] { "pack", "download" };
             #endif
 
             if(input.Length < 1) {
