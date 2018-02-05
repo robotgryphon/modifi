@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 namespace Modifi.Commands {
     internal class CommandHandler {
 
-        enum ActionType {
-            MODS,
-            DOMAINS,
-            INIT,
-            PACK,
-            HELP,
-            DOWNLOAD
+        public enum MainAction {
+            Mods,
+            Pack,
+            Help
         }
 
         /// <summary>
@@ -23,22 +20,23 @@ namespace Modifi.Commands {
         public static void ExecuteArguments(string[] input) {
             if (input.Length == 0) throw new ArgumentException("Nothing to do");
 
-            ActionType? action = ParseCommandOption<ActionType>(input[0]);
-            if (action == null) return;
+            MainAction? action = ParseCommandOption<MainAction>(input[0]);
+            if (action == null) action = MainAction.Help;
 
             IEnumerable<string> arguments = input.Skip(1);
 
             switch (action) {
-                case ActionType.MODS:
+                case MainAction.Mods:
                     ModCommandHandler.HandleModAction(arguments);
                     break;
 
-                case ActionType.PACK:
+                case MainAction.Pack:
                     PackCommandHandler.Handle(arguments);
                     break;
 
-                default:
-                    throw new NotImplementedException();
+                case MainAction.Help:
+                    CommandHandler.ListOptions<MainAction>();
+                    break;
             }
         }
 
@@ -59,6 +57,11 @@ namespace Modifi.Commands {
             }
 
             return action;
+        }
+
+        internal static void ListOptions<T>() where T : struct {
+            string[] names = Enum.GetNames(typeof(T));
+            Modifi.DefaultLogger.Information("Available actions: {0:l}", String.Join(", ", names));
         }
     }
 }

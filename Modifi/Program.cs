@@ -18,9 +18,10 @@ namespace Modifi {
 
             string[] input = args;
             
-            if(Modifi.DEBUG_MODE) input = new string[] { "pack", "download" };
+            if(Modifi.DEBUG_MODE) input = new string[] { "mods", "add" };
             if(input.Length < 1) {
-                Modifi.DefaultLogger.Error("Not sure what to do.");
+                Modifi.DefaultLogger.Error("Not sure what to do. Choose from the following actions:");
+                Commands.CommandHandler.ListOptions<Commands.CommandHandler.MainAction>();
                 return;
             }
 

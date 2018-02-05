@@ -14,20 +14,29 @@ namespace Modifi.Commands {
 
     public class ModCommandHandler {
         public enum ModActions {
-            ADD,
-            REMOVE,
-            INFO,
-            LIST,
-            DOWNLOAD,
-            VERSIONS
+            Add,
+            Remove,
+            Info,
+            Download,
+            Versions,
+            Help
         }
 
         internal static void HandleModAction(IEnumerable<string> arguments) {
+            if(arguments.Count() == 0) {
+                CommandHandler.ListOptions<ModActions>();
+                return;
+            }
 
             ModActions? action = CommandHandler.ParseCommandOption<ModActions>(arguments.First());
-            if (action == null) return;
+            if (action == null) action = ModActions.Help;
 
             IEnumerable<string> mods = arguments.Skip(1);
+            
+            if(mods.Count() == 0) {
+                Modifi.DefaultLogger.Error("No mods to work with. Specify some in the format domain:modid.");
+                return;
+            }
 
             Pack pack = Modifi.DefaultPack;
 
@@ -44,28 +53,30 @@ namespace Modifi.Commands {
                 string modVersion = ModHelper.GetModVersion(mod);
 
                 switch (action) {
-                    case ModActions.ADD:
+                    case ModActions.Add:
                         HandleModAdd(handler, modIdentifier, modVersion);
                         break;
 
-                    case ModActions.REMOVE:
+                    case ModActions.Remove:
                         HandleModRemove(handler, modIdentifier);
                         break;
 
-                    case ModActions.INFO:
+                    case ModActions.Info:
                         HandleModInformation(handler, modIdentifier, modVersion);
                         break;
 
-                    case ModActions.VERSIONS:
+                    case ModActions.Versions:
                         HandleModVersions(handler, modIdentifier);
                         break;
 
-                    case ModActions.DOWNLOAD:
+                    case ModActions.Download:
                         HandleModDownload(handler, modIdentifier, modVersion);
                         break;
 
+                    case ModActions.Help:
                     default:
-                        throw new Exception("Invalid mod action.");
+                        CommandHandler.ListOptions<ModActions>();
+                        break;
                 }
             }
 

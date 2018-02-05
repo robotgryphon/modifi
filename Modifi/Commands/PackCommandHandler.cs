@@ -14,15 +14,19 @@ namespace Modifi.Commands {
 
         private enum PackAction {
             Download,
-            Update,
+            Help,
             Info,
-            Init
+            New
         }
 
         internal static void Handle(IEnumerable<string> arguments) {
-            PackAction? action = CommandHandler.ParseCommandOption<PackAction>(arguments.First());
-            if (action == null) return;
+            if(arguments.Count() == 0) {
+                CommandHandler.ListOptions<PackAction>();
+                return;
+            }
 
+            PackAction? action = CommandHandler.ParseCommandOption<PackAction>(arguments.First());
+            if (action == null) action = PackAction.Help;
 
             Pack pack;
             ILogger log = Modifi.DefaultLogger;
@@ -32,7 +36,7 @@ namespace Modifi.Commands {
                     DownloadPack();
                     break;
 
-                case PackAction.Init:
+                case PackAction.New:
                     if (!PackHelper.PackExists())
                         PackHelper.GeneratePackFile().Wait();
                     else
@@ -57,8 +61,9 @@ namespace Modifi.Commands {
                         log.Information(" - {0:l} ({1:l})", domain, Path.Combine(Settings.DomainsDirectory, domain + ".dll"));
                     break;
 
+                case PackAction.Help:
                 default:
-                    Console.Error.WriteLine("Other pack actions are not yet supported.");
+                    CommandHandler.ListOptions<PackAction>();
                     break;
             }
         }
