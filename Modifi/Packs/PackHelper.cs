@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-
-using HashidsNet;
 using Modifi;
 
 namespace Modifi.Packs {
@@ -29,7 +27,7 @@ namespace Modifi.Packs {
 
             Pack p = new Pack();
             p.Name = packName;
-            p.Installed = ModifiVersionNumber.VERSION_1;
+            p.Installed = "1.0.0";
             p.MinecraftVersion = version;
 
             Directory.CreateDirectory(Settings.ModifiDirectory);

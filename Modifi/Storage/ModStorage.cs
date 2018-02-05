@@ -82,7 +82,7 @@ namespace Modifi.Storage {
             }
 
             // Check filename exists - if not, mod is requested and not yet downloaded
-            string filename = installedVersion.GetFilename();
+            string filename = installedVersion.Filename;
             if (filename == null)
                 return ModStatus.Requested;
 
@@ -90,7 +90,7 @@ namespace Modifi.Storage {
             string path = Path.Combine(Settings.ModPath, filename);
             if(File.Exists(path)) {
                 // If our checksum matches, the mod is installed
-                if (ModUtilities.ChecksumMatches(path, installedVersion.GetChecksum()))
+                if (ModUtilities.ChecksumMatches(path, installedVersion.Checksum))
                     return ModStatus.Installed;
                 else {
                     // TODO: Should we remove the mod metadata if the checksum failed here?
@@ -111,11 +111,13 @@ namespace Modifi.Storage {
             return true;
         }
 
-        public bool MarkInstalled(ModMetadata meta, ModVersion version) {
+        public bool MarkInstalled(ModMetadata meta, ModVersion version, ModDownloadResult downloadDetails) {
             ModStatus status = GetModStatus(meta);
             switch(status) {
                 case ModStatus.Installed:
-                    throw new Exception("Mod is already marked installed.");
+                    ModVersions.Delete(m => m.MetadataId == meta.Id);
+                    ModVersions.Insert(version);
+                    return true;
 
                 case ModStatus.NotInstalled:
                     Mods.Insert(meta);
@@ -124,8 +126,11 @@ namespace Modifi.Storage {
 
                 // Already added as requested, need to modify it
                 case ModStatus.Requested:
+                    ModVersion requested = ModVersions.FindOne(v => v.GetModVersion() == version.GetModVersion());
+                    requested.Filename = downloadDetails.Filename;
+                    requested.Checksum = downloadDetails.Checksum;
 
-                    return true;
+                    return ModVersions.Update(requested);
             }
 
             return false;

@@ -16,15 +16,9 @@ namespace Modifi {
 
         public static void Main(string[] args) {
 
-            // Modifi.AssureLockFiles();
-            // Modifi.LoadSearchPaths();
-
             string[] input = args;
             
-            #if DEBUG
-            input = new string[] { "pack", "download" };
-            #endif
-
+            if(Modifi.DEBUG_MODE) input = new string[] { "pack", "download" };
             if(input.Length < 1) {
                 Modifi.DefaultLogger.Error("Not sure what to do.");
                 return;

@@ -218,8 +218,8 @@ namespace Modifi.Commands {
                 case ModStatus.Installed:
                     Modifi.DefaultLogger.Information("Removing {0} and deleting files...", meta.GetName());
                     storage.Delete(meta);
-                    string filePath = Path.Combine(Settings.ModPath, installed.GetFilename());
-                    bool correctChecksum = ModUtilities.ChecksumMatches(filePath, installed.GetChecksum());
+                    string filePath = Path.Combine(Settings.ModPath, installed.Filename);
+                    bool correctChecksum = ModUtilities.ChecksumMatches(filePath, installed.Checksum);
                     if (correctChecksum) {
                         try {
                             File.Delete(filePath);

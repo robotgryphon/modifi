@@ -29,17 +29,7 @@ namespace Modifi {
             protected set;
         }
 
-        public static bool DEBUG_MODE {
-            get {
-                #if DEBUG
-                return true;
-                #else
-                return false;
-                #endif
-            }
-
-            private set { }
-        }
+        public static bool DEBUG_MODE = false;
 
         public static void LoadSearchPaths() {
             List<string> searchPaths = new List<string>();
@@ -99,8 +89,8 @@ namespace Modifi {
             if (Modifi._DefaultPack != null) return _DefaultPack;
 
             if(!Directory.Exists(Settings.ModifiDirectory)) {
-                Console.Error.WriteLine("Error: Modifi directory not found. Please run pack init first.");
-                throw new IOException();
+                Modifi.DefaultLogger.Error("Error: Modifi directory not found. Please run pack init first.");
+                throw new IOException("Pack not found.");
             }
 
             if(!File.Exists(Settings.PackFile)) {
