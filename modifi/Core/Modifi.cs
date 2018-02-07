@@ -1,4 +1,5 @@
 ﻿using Modifi.Packs;
+using Modifi.Domains;
 using Newtonsoft.Json;
 using Serilog;
 using Serilog.Configuration;
@@ -14,15 +15,9 @@ namespace Modifi {
 
     public class Modifi {
 
-        public static Pack DefaultPack {
-            get {
-                return LoadOrGetDefaultPack();
-            }
+        protected static Modifi INSTANCE;
 
-            private set { }
-        }
-
-        protected static Pack _DefaultPack;
+        protected Dictionary<string, IDomain> LoadedDomains;
 
         public static IEnumerable<string> DomainSearchPaths {
             get;
@@ -30,6 +25,92 @@ namespace Modifi {
         }
 
         public static bool DEBUG_MODE = false;
+
+        protected Modifi() {
+            this.LoadedDomains = new Dictionary<string, IDomain>();
+        }
+
+        public static Modifi GetInstance() {
+            if(INSTANCE == null) {
+                INSTANCE = new Modifi();
+            }
+
+            return INSTANCE;
+        }
+
+        public bool IsDomainLoaded(string domain) {
+            return LoadedDomains.ContainsKey(domain);
+        }
+        
+        /// <summary>
+        /// Loads a domain and adds it to a pack's loaded domain list.        /// </summary>
+        /// <param name="pack"></param>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        public IDomain LoadDomain(string domain) {
+
+            if (LoadedDomains.ContainsKey(domain)) return LoadedDomains[domain];
+
+            // Perform domain search
+            bool domainFound = false;
+            string domainPath = null;
+
+            if (Modifi.DomainSearchPaths == null)
+                Modifi.LoadSearchPaths();
+
+            foreach (string path in Modifi.DomainSearchPaths) {
+                string pathCheck = Path.Combine(path, domain + ".dll");
+
+                Modifi.DefaultLogger.Debug("Trying to load domain handler from {0}...", pathCheck);
+                if(File.Exists(pathCheck)) {
+                    domainPath = pathCheck;
+                    domainFound = true;
+                    break;
+                }
+            }
+
+            if (!domainFound)
+                throw new DllNotFoundException("Cannot find the domain DLL.");
+
+            Assembly cfAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(domainPath);
+            Type controller = cfAssembly.ExportedTypes.First(t => t.GetInterfaces().Contains(typeof(IDomain)));
+
+            if(controller == null) {
+                throw new Exception("Cannot find the domain handler inside domain assembly.");
+            }
+
+            try {
+                IDomain domainInstance = Activator.CreateInstance(controller) as IDomain;
+                LoadedDomains.Add(domain, domainInstance);
+                return domainInstance;
+            }
+
+            catch(Exception e) {
+                Modifi.DefaultLogger.Error("Error loading domain handler from {0}:", domainPath);
+                Modifi.DefaultLogger.Error(e.Message);
+                return null;
+            }
+            
+        }
+
+        public IDomain GetDomain(string id) {
+            if (LoadedDomains.ContainsKey(id)) return LoadedDomains[id];
+            try {
+
+                ConsoleColor old = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Modifi.DefaultLogger.Information("Domain {0:l} not loaded, loading it now.", id);
+                Console.ForegroundColor = old;
+
+                IDomain domain = LoadDomain(id);
+                return domain;
+            }
+
+            catch(Exception e) {
+                Modifi.DefaultLogger.Error(e.Message);
+                return null;
+            }
+        }
 
         public static void LoadSearchPaths() {
             List<string> searchPaths = new List<string>();
@@ -80,36 +161,6 @@ namespace Modifi {
                 .CreateLogger();
 
             return log;
-        }
-        /// <summary>
-        /// Loads the pack from the Modifi directory.
-        /// </summary>
-        /// <exception cref="IOException"></exception>
-        public static Pack LoadOrGetDefaultPack() {
-            if (Modifi._DefaultPack != null) return _DefaultPack;
-
-            if(!Directory.Exists(Settings.ModifiDirectory)) {
-                Modifi.DefaultLogger.Error("Error: Modifi directory not found. Please run pack init first.");
-                throw new IOException("Pack not found.");
-            }
-
-            if(!File.Exists(Settings.PackFile)) {
-                Console.Error.WriteLine("Error: Modifi pack file not found. Please run pack init command first.");
-                throw new IOException();
-            }
-
-            JsonSerializer s = JsonSerializer.Create(Settings.JsonSerializer);
-
-            Pack p = new Pack();
-
-            // Read JSON pack file and copy data into the new pack object
-            StreamReader sr = new StreamReader(File.OpenRead(Settings.PackFile));
-            s.Populate(new JsonTextReader(sr), p);
-            sr.Close();
-
-            // Set cache object for quick fetch
-            Modifi._DefaultPack = p;
-            return p;
         }
 
         internal static void ExecuteArguments(string[] input) {

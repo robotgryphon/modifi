@@ -38,11 +38,16 @@ namespace Modifi.Commands {
                 return;
             }
 
-            Pack pack = Modifi.DefaultPack;
+            Pack pack;
+            try { pack = PackHelper.LoadPack("pack"); }
+            catch(FileNotFoundException) {
+                Modifi.DefaultLogger.Error("Error: Pack not found. Create one first.");
+                return;
+            }
 
             foreach (string mod in mods) {
                 string domainName = ModHelper.GetDomainName(mod);
-                IDomain handler = pack.GetDomain(domainName);
+                IDomain handler = Modifi.GetInstance().GetDomain(domainName);
 
                 if (handler == null || !(handler is IDomain)) {
                     Modifi.DefaultLogger.Error("No domain handler found for {0}. Aborting.", domainName);
@@ -54,23 +59,23 @@ namespace Modifi.Commands {
 
                 switch (action) {
                     case ModActions.Add:
-                        HandleModAdd(handler, modIdentifier, modVersion);
+                        HandleModAdd(pack, handler, modIdentifier, modVersion);
                         break;
 
                     case ModActions.Remove:
-                        HandleModRemove(handler, modIdentifier);
+                        HandleModRemove(pack, handler, modIdentifier);
                         break;
 
                     case ModActions.Info:
-                        HandleModInformation(handler, modIdentifier, modVersion);
+                        HandleModInformation(pack, handler, modIdentifier, modVersion);
                         break;
 
                     case ModActions.Versions:
-                        HandleModVersions(handler, modIdentifier);
+                        HandleModVersions(pack, handler, modIdentifier);
                         break;
 
                     case ModActions.Download:
-                        HandleModDownload(handler, modIdentifier, modVersion);
+                        HandleModDownload(pack, handler, modIdentifier, modVersion);
                         break;
 
                     case ModActions.Help:
@@ -88,10 +93,10 @@ namespace Modifi.Commands {
         /// </summary>
         /// <param name="domain">Domain handler to use for lookup.</param>
         /// <param name="modIdentifier">Mod to lookup versions for.</param>
-        public static void HandleModVersions(IDomain domain, string modIdentifier) {
+        public static void HandleModVersions(Pack pack, IDomain domain, string modIdentifier) {
             IDomainHandler handler = domain.GetDomainHandler();
 
-            ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+            ModMetadata meta = handler.GetModMetadata(pack.MinecraftVersion, modIdentifier).Result;
 
             IEnumerable<ModVersion> latestVersions = handler.GetRecentVersions(meta).Result;
 
@@ -117,13 +122,13 @@ namespace Modifi.Commands {
             }
         }
 
-        public static void HandleModAdd(IDomain domain, string modIdentifier, string modVersion = null) {
+        public static void HandleModAdd(Pack pack, IDomain domain, string modIdentifier, string modVersion = null) {
 
             IDomainHandler handler = domain.GetDomainHandler();
-            ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+            ModMetadata meta = handler.GetModMetadata(pack.MinecraftVersion, modIdentifier).Result;
 
             // Check mod installation status, error out if already requested/installed
-            using (IModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain)) {
+            using (IModStorage storage = new ModStorage(pack.Version, domain)) {
                 try {
                     ModStatus status = storage.GetModStatus(meta);
                     switch (status) {
@@ -149,7 +154,7 @@ namespace Modifi.Commands {
                 ModVersion v = handler.GetModVersion(meta, modVersion).Result;
 
                 // Connect to storage and mark the mod as requested
-                using (ModStorage storage = new ModStorage(Modifi.DefaultPack.MinecraftVersion, domain)) {
+                using (ModStorage storage = new ModStorage(pack.MinecraftVersion, domain)) {
                     storage.MarkRequested(meta, v);
                     return;
                 }
@@ -197,14 +202,14 @@ namespace Modifi.Commands {
             Console.WriteLine("Selected Version: " + version.GetModVersion());
 
             // Create a storage handler for the domain and mark the version as requested
-            using (ModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain)) {
+            using (ModStorage storage = new ModStorage(pack.Version, domain)) {
                 storage.MarkRequested(meta, version);
             }
         }
 
-        public static void HandleModRemove(IDomain domain, string modIdentifier) {
+        public static void HandleModRemove(Pack pack, IDomain domain, string modIdentifier) {
             IDomainHandler handler = domain.GetDomainHandler();
-            ModStorage storage = new ModStorage(Modifi.DefaultPack.Installed, domain);
+            ModStorage storage = new ModStorage(pack.Version, domain);
 
             ModMetadata meta = storage.GetMetadata(modIdentifier);
             if(meta == null) {
@@ -265,8 +270,8 @@ namespace Modifi.Commands {
             storage.Dispose();
         }
 
-        public static void HandleModInformation(IDomain domain, string modIdentifier, string modVersion = null) {
-            ModMetadata meta = domain.GetDomainHandler().GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+        public static void HandleModInformation(Pack pack, IDomain domain, string modIdentifier, string modVersion = null) {
+            ModMetadata meta = domain.GetDomainHandler().GetModMetadata(pack.MinecraftVersion, modIdentifier).Result;
 
             ILogger log = Modifi.DefaultLogger;
 
@@ -275,13 +280,13 @@ namespace Modifi.Commands {
                 log.Information(meta.GetDescription());
         }
 
-        public static ModDownloadResult? HandleModDownload(IDomain domain, string modIdentifier, string modVersion = null) {
+        public static ModDownloadDetails? HandleModDownload(Pack pack, IDomain domain, string modIdentifier, string modVersion = null) {
 
             IDomainHandler handler = domain.GetDomainHandler();
 
             // Fetch the mod version information from the Curseforge API
             try {
-                ModMetadata meta = handler.GetModMetadata(Modifi.DefaultPack.MinecraftVersion, modIdentifier).Result;
+                ModMetadata meta = handler.GetModMetadata(pack.MinecraftVersion, modIdentifier).Result;
                 ModVersion mod = handler.GetModVersion(meta, modVersion).Result;
 
                 return handler.DownloadMod(mod, Settings.ModPath).Result;

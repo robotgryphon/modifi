@@ -99,7 +99,7 @@ namespace Domains.Curseforge {
         /// <exception cref="ModDownloadException"></exception>
         /// <exception cref="IOException"></exception>
         /// <returns></returns>
-        public async Task<ModDownloadResult> DownloadMod(ModVersion version, string directory) {
+        public async Task<ModDownloadDetails> DownloadMod(ModVersion version, string directory) {
 
             CurseforgeModVersion versionInfo;
             if (version is CurseforgeModVersion)
@@ -146,7 +146,7 @@ namespace Domains.Curseforge {
                         fs.Close();
 
 
-                        ModDownloadResult result = new ModDownloadResult();
+                        ModDownloadDetails result = new ModDownloadDetails();
                         result.Filename = filename;
                         result.Checksum = ModUtilities.GetFileChecksum(finalFilename);
 

@@ -111,7 +111,7 @@ namespace Modifi.Storage {
             return true;
         }
 
-        public bool MarkInstalled(ModMetadata meta, ModVersion version, ModDownloadResult downloadDetails) {
+        public bool MarkInstalled(ModMetadata meta, ModVersion version, ModDownloadDetails downloadDetails) {
             ModStatus status = GetModStatus(meta);
             switch(status) {
                 case ModStatus.Installed:

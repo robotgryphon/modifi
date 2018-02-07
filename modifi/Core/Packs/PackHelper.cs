@@ -27,7 +27,7 @@ namespace Modifi.Packs {
 
             Pack p = new Pack();
             p.Name = packName;
-            p.Installed = "1.0.0";
+            p.Version = "1.0.0";
             p.MinecraftVersion = version;
 
             Directory.CreateDirectory(Settings.ModifiDirectory);
@@ -53,6 +53,24 @@ namespace Modifi.Packs {
 
         public static bool PackExists() {
             return File.Exists(Settings.PackFile);
+        }
+
+        public static Pack LoadPack(string packname) {
+            string actualPath = Path.Combine(Environment.CurrentDirectory, packname + ".json");
+            if(File.Exists(actualPath)) {
+                JsonSerializer s = JsonSerializer.Create(Settings.JsonSerializer);
+
+                Pack p = new Pack();
+
+                // Read JSON pack file and copy data into the new pack object
+                StreamReader sr = new StreamReader(File.OpenRead(actualPath));
+                s.Populate(new JsonTextReader(sr), p);
+                sr.Close();
+
+                return p;
+            } else {
+                throw new FileNotFoundException();
+            }
         }
     }
 }

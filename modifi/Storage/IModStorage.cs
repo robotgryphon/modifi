@@ -21,7 +21,7 @@ namespace Modifi.Storage {
         /// <returns>True if successfully requested, false otherwise.</returns>
         bool MarkRequested(ModMetadata meta, ModVersion version);
 
-        bool MarkInstalled(ModMetadata meta, ModVersion version, ModDownloadResult downloadDetails);
+        bool MarkInstalled(ModMetadata meta, ModVersion version, ModDownloadDetails downloadDetails);
 
         /// <summary>
         /// Removes a mod from the database, making it "uninstalled".

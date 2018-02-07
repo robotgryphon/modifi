@@ -31,7 +31,7 @@ namespace Modifi.Domains {
         /// <param name="version">The version to download.</param>
         /// <param name="location">The location (directory) to download the mod to. If null, it defaults to the working directory.</param>
         /// <returns></returns>
-        Task<ModDownloadResult> DownloadMod(ModVersion version, string location);
+        Task<ModDownloadDetails> DownloadMod(ModVersion version, string location);
 
         /// <summary>
         /// Gets the most recent versions of a mod.

@@ -44,7 +44,7 @@ namespace Modifi.Commands {
                     break;
 
                 case PackAction.Info:
-                    try { pack = Modifi.DefaultPack; }
+                    try { pack = PackHelper.LoadPack("pack"); }
                     catch(IOException) {
                         Modifi.DefaultLogger.Error("Error loading pack, make sure one is created with {0}.", "pack init");
                         return;
@@ -57,8 +57,6 @@ namespace Modifi.Commands {
                     log.Information("Required Domains:");
 
                     Console.ForegroundColor = ConsoleColor.White;
-                    foreach(string domain in pack.UseDomains)
-                        log.Information(" - {0:l} ({1:l})", domain, Path.Combine(Settings.DomainsDirectory, domain + ".dll"));
                     break;
 
                 case PackAction.Help:
@@ -69,62 +67,70 @@ namespace Modifi.Commands {
         }
 
         private static void DownloadPack() {
-            using (Pack p = Modifi.DefaultPack) {
-                ILogger log = Modifi.DefaultLogger;
+            try {
+                using (Pack p = PackHelper.LoadPack("pack")) {
+                    ILogger log = Modifi.DefaultLogger;
 
-                log.Information("Downloading modpack.");
-                log.Information(Environment.NewLine);
+                    log.Information("Downloading modpack.");
+                    log.Information(Environment.NewLine);
 
-                IDomain curseforge;
-                try {
-                    curseforge = DomainHelper.LoadDomain(p, "curseforge");
-                }
+                    IDomain curseforge;
+                    try {
+                        bool loaded = Modifi.GetInstance().IsDomainLoaded("curseforge");
+                        if(loaded) curseforge = Modifi.GetInstance().GetDomain("curseforge");
+                        else curseforge = Modifi.GetInstance().LoadDomain("curseforge");
+                    }
 
-                catch(DllNotFoundException) {
-                    log.Error("Cannot install mods; curseforge domain handler not found.");
-                    return;
-                }
-                
-                IDomainHandler handler = curseforge.GetDomainHandler();
-                using(ModStorage storage = new ModStorage(p.Installed, curseforge)) {
-                    IEnumerable<ModMetadata> mods = storage.GetAllMods();
-                    foreach(ModMetadata mod in mods) {
-                        log.Information("Installing: {0:l}", mod.GetName());
+                    catch(DllNotFoundException) {
+                        log.Error("Cannot install mods; curseforge domain handler not found.");
+                        return;
+                    }
+                    
+                    IDomainHandler handler = curseforge.GetDomainHandler();
+                    using(ModStorage storage = new ModStorage(p.Version, curseforge)) {
+                        IEnumerable<ModMetadata> mods = storage.GetAllMods();
+                        foreach(ModMetadata mod in mods) {
+                            log.Information("Installing: {0:l}", mod.GetName());
 
-                        ModStatus status;
-                        try { status = storage.GetModStatus(mod); }
-                        catch(Exception) {
-                            log.Error("Error: Mod marked installed but checksum did not match.");
-                            log.Error("Please use the remove command and re-add it, or download the version manually.");
-                            continue;
-                        }
-
-                        switch(status) {
-                            case ModStatus.Installed:
-                                log.Information("Skipping, already installed.");
-                                log.Information(Environment.NewLine);
+                            ModStatus status;
+                            try { status = storage.GetModStatus(mod); }
+                            catch(Exception) {
+                                log.Error("Error: Mod marked installed but checksum did not match.");
+                                log.Error("Please use the remove command and re-add it, or download the version manually.");
                                 continue;
+                            }
 
-                            case ModStatus.Requested:
-                                ModVersion version = storage.GetMod(mod);
-                                log.Information("Requested Version: {0:l} ({1})", version.GetVersionName(), version.GetModVersion());
-                                try {
-                                    ModDownloadResult result = handler.DownloadMod(version, Settings.ModPath).Result;
-                                    storage.MarkInstalled(mod, version, result);
-
-                                    log.Information("Downloaded to {0}.", result.Filename);
+                            switch(status) {
+                                case ModStatus.Installed:
+                                    log.Information("Skipping, already installed.");
                                     log.Information(Environment.NewLine);
-                                }
+                                    continue;
 
-                                catch(Exception e) {
-                                    log.Error(e.Message);
-                                    log.Error(Environment.NewLine);
-                                }
+                                case ModStatus.Requested:
+                                    ModVersion version = storage.GetMod(mod);
+                                    log.Information("Requested Version: {0:l} ({1})", version.GetVersionName(), version.GetModVersion());
+                                    try {
+                                        ModDownloadDetails result = handler.DownloadMod(version, Settings.ModPath).Result;
+                                        storage.MarkInstalled(mod, version, result);
 
-                                break;
+                                        log.Information("Downloaded to {0}.", result.Filename);
+                                        log.Information(Environment.NewLine);
+                                    }
+
+                                    catch(Exception e) {
+                                        log.Error(e.Message);
+                                        log.Error(Environment.NewLine);
+                                    }
+
+                                    break;
+                            }
                         }
                     }
                 }
+            }
+
+            catch(FileNotFoundException) {
+                Modifi.DefaultLogger.Error("Pack file not found. Create one first.");
             }
         }
     }
