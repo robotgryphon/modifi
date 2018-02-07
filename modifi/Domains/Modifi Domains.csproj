@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Modifi.Mods\Modifi Mods.csproj" />
+    <ProjectReference Include="..\Mods\Modifi Mods.csproj" />
   </ItemGroup>
 
 </Project>

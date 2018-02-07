@@ -1,0 +1,14 @@
+{
+    "name": "ZetaCraft",
+    "version": "1.0.0",
+    "update_url": "",
+    "minecraft_version": "1.12.2",
+    
+    "mods": {
+        "curseforge:jei": "2522813"
+    },
+
+    "files": {
+        "curseforge:jei": "6a044138a7068e57b534a76b346ea14a5df31619111e7b49ac614c3ab06af122"
+    }
+}

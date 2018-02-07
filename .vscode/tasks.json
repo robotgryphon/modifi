@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Modifi/Modifi.csproj"
+                "${workspaceFolder}/modifi/Core/Modifi.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

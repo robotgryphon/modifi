@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Modifi Storage\Modifi Storage.csproj" />
-    <ProjectReference Include="..\Modifi.Domains\Modifi Domains.csproj" />
-    <ProjectReference Include="..\Modifi.Mods\Modifi Mods.csproj" />
+    <ProjectReference Include="..\Storage\Modifi Storage.csproj" />
+    <ProjectReference Include="..\Domains\Modifi Domains.csproj" />
+    <ProjectReference Include="..\Mods\Modifi Mods.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

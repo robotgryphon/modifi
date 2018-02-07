@@ -32,18 +32,21 @@ namespace Modifi.Packs {
 
         public IDomain GetDomain(string id) {
             if (Domains.ContainsKey(id)) return Domains[id];
-            if (DomainHelper.CanLoadDomain(id)) {
+            try {
 
                 ConsoleColor old = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("Domain {0} not loaded, loading it now.", id);
+                Modifi.DefaultLogger.Information("Domain {0:l} not loaded, loading it now.", id);
                 Console.ForegroundColor = old;
 
                 IDomain domain = DomainHelper.LoadDomain(this, id);
                 return domain;
             }
 
-            return null;
+            catch(Exception e) {
+                Modifi.DefaultLogger.Error(e.Message);
+                return null;
+            }
         }
 
         public IEnumerable<IDomain> GetRequiredDomains() {
