@@ -8,4 +8,3 @@ install:
 
 script:
 - dotnet build
-- dotnet test RobotGryphon.Modifi.Tests/RobotGryphon.Modifi.Tests.csproj

@@ -2,12 +2,23 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "build",
+            "label": "build",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
                 "${workspaceFolder}/modifi/Core/Modifi.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+
+        {
+            "label": "buildcf",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/curseforge/Domains.Curseforge.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
