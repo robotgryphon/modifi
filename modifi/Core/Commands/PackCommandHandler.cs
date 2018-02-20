@@ -1,6 +1,5 @@
 ﻿using Modifi.Domains;
 using Modifi.Mods;
-using Modifi.Packs;
 using Modifi.Storage;
 using Serilog;
 using System;
@@ -37,14 +36,23 @@ namespace Modifi.Commands {
                     break;
 
                 case PackAction.New:
-                    if (!PackHelper.PackExists())
-                        PackHelper.GeneratePackFile().Wait();
-                    else
+                    if (!File.Exists(Modifi.DEFAULT_PACK_PATH)) {
+                        
+                        Pack p = new Pack();
+                        Console.Write("Please enter a pack name: ");
+                        p.Name = Console.ReadLine();
+
+                        Console.Write("Please enter a Minecraft Version: ");
+                        p.MinecraftVersion = Console.ReadLine();
+
+                        p.Version = "1.0.0";
+                        p.SaveAs(Modifi.DEFAULT_PACK_PATH);
+                    } else
                         log.Error("Pack file already exists.");
                     break;
 
                 case PackAction.Info:
-                    try { pack = PackHelper.LoadPack("pack"); }
+                    try { pack = Pack.Load(Modifi.DEFAULT_PACK_PATH); }
                     catch(IOException) {
                         Modifi.DefaultLogger.Error("Error loading pack, make sure one is created with {0}.", "pack init");
                         return;
@@ -68,7 +76,7 @@ namespace Modifi.Commands {
 
         private static void DownloadPack() {
             try {
-                using (Pack p = PackHelper.LoadPack("pack")) {
+                using (Pack p = Pack.Load(Modifi.DEFAULT_PACK_PATH)) {
                     ILogger log = Modifi.DefaultLogger;
 
                     log.Information("Downloading modpack.");

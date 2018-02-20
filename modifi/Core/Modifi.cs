@@ -1,4 +1,4 @@
-﻿using Modifi.Packs;
+﻿using Modifi.Storage;
 using Modifi.Domains;
 using Newtonsoft.Json;
 using Serilog;
@@ -26,6 +26,8 @@ namespace Modifi {
 
         public static bool DEBUG_MODE = false;
 
+        public static string DEFAULT_PACK_PATH = Path.Combine(Environment.CurrentDirectory, "pack.json");
+        
         protected Modifi() {
             this.LoadedDomains = new Dictionary<string, IDomain>();
         }

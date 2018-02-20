@@ -1,6 +1,5 @@
 ﻿using Modifi.Domains;
 using Modifi.Mods;
-using Modifi.Packs;
 using Modifi.Storage;
 using Serilog;
 using System;
@@ -39,7 +38,9 @@ namespace Modifi.Commands {
             }
 
             Pack pack;
-            try { pack = PackHelper.LoadPack("pack"); }
+
+            // TODO: Make this path configurable so you can change which pack you're using
+            try { pack = Pack.Load(Modifi.DEFAULT_PACK_PATH); }
             catch(FileNotFoundException) {
                 Modifi.DefaultLogger.Error("Error: Pack not found. Create one first.");
                 return;

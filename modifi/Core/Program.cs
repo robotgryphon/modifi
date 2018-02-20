@@ -1,6 +1,5 @@
 ﻿using Modifi.Domains;
 using Modifi.Mods;
-using Modifi.Packs;
 using Modifi.Storage;
 using Serilog;
 using Serilog.Context;
@@ -33,16 +32,19 @@ namespace Modifi {
 
             // Modifi.DefaultLogger.Information(details.Encrypt());
 
-            Pack p = PackHelper.LoadPack("new-pack");
-            Modifi.DefaultLogger.Information(p.Name);
-            foreach(string mod in p.Mods.Keys) {
-                Modifi.DefaultLogger.Information(mod);
-                if(p.Files.ContainsKey(mod)) {
-                    ModDownloadDetails downloadInfo = Pack.ParseDownloadEntry(p.Files[mod]);
-                    Modifi.DefaultLogger.Information("> Downloaded to {0:l}", downloadInfo.Filename);
-                }
-            }
-            Modifi.ExecuteArguments(input);
+            Pack p = Pack.Load(System.IO.Path.Combine(Environment.CurrentDirectory, "test-pack.json"));
+            Console.WriteLine(p.Name);
+            
+            // Pack p = Pack.Load(Modifi.DEFAULT_PACK_PATH);
+            // Modifi.DefaultLogger.Information(p.Name);
+            // foreach(string mod in p.Mods.Keys) {
+            //     Modifi.DefaultLogger.Information(mod);
+            //     if(p.Files.ContainsKey(mod)) {
+            //         ModDownloadDetails downloadInfo = ModDownloadDetails.Decrypt(p.Files[mod]);
+            //         Modifi.DefaultLogger.Information("> Downloaded to {0:l}", downloadInfo.Filename);
+            //     }
+            // }
+            // Modifi.ExecuteArguments(input);
         }
     }
 

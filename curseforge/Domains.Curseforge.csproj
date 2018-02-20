@@ -16,8 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\modifi\Domains\Modifi Domains.csproj" />
-    <ProjectReference Include="..\modifi\Mods\Modifi Mods.csproj" />
+    <ProjectReference Include="..\modifi\Connectors\Modifi.Connectors.csproj" />
   </ItemGroup>
 
 </Project>

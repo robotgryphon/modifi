@@ -10,15 +10,13 @@
 
   <ItemGroup>
     <PackageReference Include="LiteDB" Version="4.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta3" />
     <PackageReference Include="Serilog" Version="2.6.1-dev-00938" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Storage\Modifi Storage.csproj" />
-    <ProjectReference Include="..\Domains\Modifi Domains.csproj" />
-    <ProjectReference Include="..\Mods\Modifi Mods.csproj" />
+    <ProjectReference Include="..\Connectors\Modifi.Connectors.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

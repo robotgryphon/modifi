@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Modifi {
+namespace Modifi.Mods {
     public abstract class ModHelper {
 
         public static Regex MOD_VERSION_REGEX = new Regex(@"(?<domain>[\w]+):(?<modid>[\w_\-]+)(@(?<version>[\d]+))?");
@@ -19,33 +19,9 @@ namespace Modifi {
             return m;
         }
 
-        internal static string GetDomainName(string mod) {
+        public static string GetDomainName(string mod) {
             Match m = SplitModString(mod);
             return m.Groups["domain"].Value.ToLower();
-        }
-
-        /// <summary>
-        /// Prints out some mod information in a standardized manner.
-        /// </summary>
-        /// <param name="meta"></param>
-        public static void PrintModInformation(ModMetadata meta, bool header = false) {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine();
-            Console.WriteLine(meta.GetName());
-            Console.ForegroundColor = ConsoleColor.White;
-
-            if (meta.HasDescription()) {
-                Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(meta.GetDescription());
-            }
-
-            if (header) {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("".PadLeft(Console.BufferWidth - 10, '='));
-            }
-
-            Console.ResetColor();
         }
 
         public static string GetModIdentifier(string mod) {

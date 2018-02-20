@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <RootNamespace>RobotGryphon.Modifi.Mods</RootNamespace>
-    <AssemblyName>Modifi Mods</AssemblyName>
+    <RootNamespace>Modifi</RootNamespace>
+    <AssemblyName>Modifi.Connectors</AssemblyName>
   </PropertyGroup>
 
 </Project>
