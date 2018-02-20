@@ -62,7 +62,12 @@ namespace Modifi.Commands {
                     log.Information("{0:l}", pack.Name);
                     log.Information("Built for Minecraft {0:l}", pack.MinecraftVersion);
                     log.Information("");
-                    log.Information("Required Domains:");
+                    
+                    log.Information("Installed Mods:");
+                    foreach(KeyValuePair<string, string> mod in pack.Files) {
+                        ModDownloadDetails details = ModDownloadDetails.Decrypt(mod.Value);
+                        log.Information("{0:l} downloaded to {1:l}", mod.Key.PadRight(32), details.Filename);
+                    }
 
                     Console.ForegroundColor = ConsoleColor.White;
                     break;
