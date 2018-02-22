@@ -39,10 +39,6 @@ namespace Modifi {
 
             return INSTANCE;
         }
-
-        public bool IsDomainLoaded(string domain) {
-            return LoadedDomains.ContainsKey(domain);
-        }
         
         /// <summary>
         /// Loads a domain and adds it to a pack's loaded domain list.        /// </summary>
@@ -116,11 +112,14 @@ namespace Modifi {
 
         public static void LoadSearchPaths() {
             List<string> searchPaths = new List<string>();
+            
+            // Automatically try to find stuff in the modifi directory, current directory, and app directory
             searchPaths.Add(Path.Combine(Settings.ModifiDirectory, "domains"));
-            searchPaths.Add(Settings.DomainsDirectory);
+            searchPaths.Add(Path.Combine(Environment.CurrentDirectory, "domains"));
+            searchPaths.Add(Path.Combine(Settings.AppDirectory, "domains"));
 
-            // Load JSON settings file
-            if (File.Exists(Path.Combine(Settings.ModifiDirectory, "domains.json"))) {
+            // Load domains JSON file from the app directory if it exists
+            if (File.Exists(Path.Combine(Settings.AppDirectory, "domains.json"))) {
                 string domainsJSON = File.ReadAllText(Path.Combine(Settings.ModifiDirectory, "domains.json"));
                 IEnumerable<string> paths = JsonConvert.DeserializeObject<IEnumerable<string>>(domainsJSON);
 
@@ -132,7 +131,7 @@ namespace Modifi {
                         path2 = Path.Combine(Environment.CurrentDirectory, pathPart);
                     }
 
-                    searchPaths.Add(path2);
+                    if(Directory.Exists(path2)) searchPaths.Add(path2);
                 }
             }
 

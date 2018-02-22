@@ -6,12 +6,9 @@ using System.Text;
 namespace Modifi.Storage {
 
     /// <summary>
-    /// Represents storage for a set of domains.
-    /// Handles domain mod installations.
+    /// An interface specifying methods to help with installed mod data.
     /// </summary>
-    public interface IModStorage : IDisposable {
-
-        IEnumerable<ModMetadata> GetAllMods();
+    public interface IModifiLock : IDisposable {
 
         /// <summary>
         /// Marks a mod as requested, so the pack can download it when ready.

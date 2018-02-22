@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Modifi {
 
-    public class Program {
+    public class Launcher {
 
         public static void Main(string[] args) {
 

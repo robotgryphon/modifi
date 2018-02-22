@@ -8,3 +8,4 @@ install:
 
 script:
 - dotnet build
+- dotnet test test/Modifi/Modifi.csproj

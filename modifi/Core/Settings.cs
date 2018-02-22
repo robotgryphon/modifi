@@ -24,13 +24,6 @@ namespace Modifi {
         /// The location of the modifi executable.
         /// </summary>
         public static string AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
-        #if DEBUG
-                public static string DomainsDirectory = Path.Combine(Environment.CurrentDirectory, "domains");
-        #elif (!DEBUG)
-                public static string DomainsDirectory = Path.Combine(AppDirectory, "domains");
-        #endif
-
         
     }
 }

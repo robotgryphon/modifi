@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Modifi.Storage {
 
-    internal class ModStorage : IModStorage, IDisposable {
+    internal class ModStorage : IModifiLock, IDisposable {
 
         protected IDomain Domain;
 

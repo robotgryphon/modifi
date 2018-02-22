@@ -129,7 +129,7 @@ namespace Modifi.Commands {
             ModMetadata meta = handler.GetModMetadata(pack.MinecraftVersion, modIdentifier).Result;
 
             // Check mod installation status, error out if already requested/installed
-            using (IModStorage storage = new ModStorage(pack.Version, domain)) {
+            using (IModifiLock storage = new ModStorage(pack.Version, domain)) {
                 try {
                     ModStatus status = storage.GetModStatus(meta);
                     switch (status) {
