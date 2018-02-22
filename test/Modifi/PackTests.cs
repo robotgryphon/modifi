@@ -4,9 +4,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Modifi.Storage;
-using Modifi.Tests;
 
-namespace Modifi {
+namespace Modifi.Tests {
     
     [TestClass]
     public class PackTests {
@@ -74,7 +73,7 @@ namespace Modifi {
         public async Task TestPackAdd() {
             Pack original = CreatePack();
             original.SetFilename(Path.Combine(dataDirectory, "test-mod-add.json"));
-            
+
             await original.AddMod("test", "testmod", "latest");
 
             Assert.IsTrue(original.Mods.ContainsKey("test:testmod"));
