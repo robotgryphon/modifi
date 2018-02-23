@@ -72,11 +72,23 @@ namespace Modifi.Tests {
         [TestMethod]
         public async Task TestPackAdd() {
             Pack original = CreatePack();
-            original.SetFilename(Path.Combine(dataDirectory, "test-mod-add.json"));
+            Pack test = CreatePack();
 
-            await original.AddMod("test", "testmod", "latest");
+            await original.AddMod("test:testmod", "latest");
 
-            Assert.IsTrue(original.Mods.ContainsKey("test:testmod"));
+            Assert.AreNotEqual(original.Mods, test.Mods);
+            Assert.IsTrue(original.Mods.Count > test.Mods.Count);
+        }
+
+        [TestMethod]
+        public async Task TestPackRemove() {
+            Pack original = CreatePack();
+            Pack test = CreatePack();
+
+            await original.RemoveMod("curseforge:jei");
+
+            Assert.AreNotEqual(original.Mods, test.Mods);
+            Assert.IsTrue(original.Mods.Count < test.Mods.Count);
         }
     }
 }

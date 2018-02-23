@@ -97,8 +97,7 @@ namespace Modifi.Storage {
             }
         }
 
-        public Task AddMod(string domain, string modid, string version) {
-            string modString = String.Format("{0}:{1}", domain, modid);
+        public Task AddMod(string modString, string version) {
             this.Mods.Add(modString, version);
             return this.Save();
         }
