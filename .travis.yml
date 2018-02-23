@@ -9,5 +9,5 @@ install:
 - dotnet restore modifi/Core
 
 script:
-- dotnet build
+- dotnet build modifi/Core
 - dotnet test test/Modifi
