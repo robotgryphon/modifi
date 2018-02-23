@@ -36,7 +36,10 @@ namespace Modifi.Storage {
         /// </summary>
         public Dictionary<string, string> Files;
 
-        public Pack() { }
+        public Pack() { 
+            this.Mods = new Dictionary<string, string>();
+            this.Files = new Dictionary<string, string>();
+        }
 
         public void Dispose() {
             // Do nothing here unless necessary, it's to make code look a bit nicer if people wanna do using()

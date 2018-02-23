@@ -34,10 +34,11 @@ namespace Modifi.Tests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(FileNotFoundException))]
         public void TestInvalidPackLoad () {
             // Pack.json does not exist
-            Pack p = Pack.Load("pack.json");
+            Assert.ThrowsException<FileNotFoundException>(() => {
+                Pack.Load("pack.json");
+            });
         }
 
         [TestMethod]
