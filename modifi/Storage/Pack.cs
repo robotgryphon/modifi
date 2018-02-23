@@ -97,24 +97,19 @@ namespace Modifi.Storage {
             }
         }
 
-        public Task AddMod(string modString, string version) {
+        public void AddMod(string modString, string version) {
             this.Mods.Add(modString, version);
-            return this.Save();
         }
 
-        public Task AddMod(IDomain domain, ModMetadata mod, ModVersion version) {
+        public void AddMod(IDomain domain, ModMetadata mod, ModVersion version) {
             string modString = String.Format("{0}:{1}", domain.GetDomainIdentifier(), mod.GetModIdentifier());
             this.Mods.Add(modString, version.GetModVersion());
-            return this.Save();
         }
 
-        public Task RemoveMod(string modString) {
+        public void RemoveMod(string modString) {
             if (this.Mods.ContainsKey(modString)) {
                 this.Mods.Remove(modString);
-                return this.Save();
             }
-
-            return Task.CompletedTask;
         }
 
     }

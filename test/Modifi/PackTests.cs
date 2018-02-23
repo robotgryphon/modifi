@@ -70,22 +70,22 @@ namespace Modifi.Tests {
         }
 
         [TestMethod]
-        public async Task TestPackAdd() {
+        public void TestPackAdd() {
             Pack original = CreatePack();
             Pack test = CreatePack();
 
-            await original.AddMod("test:testmod", "latest");
+            original.AddMod("test:testmod", "latest");
 
             Assert.AreNotEqual(original.Mods, test.Mods);
             Assert.IsTrue(original.Mods.Count > test.Mods.Count);
         }
 
         [TestMethod]
-        public async Task TestPackRemove() {
+        public void TestPackRemove() {
             Pack original = CreatePack();
             Pack test = CreatePack();
 
-            await original.RemoveMod("curseforge:jei");
+            original.RemoveMod("curseforge:jei");
 
             Assert.AreNotEqual(original.Mods, test.Mods);
             Assert.IsTrue(original.Mods.Count < test.Mods.Count);
