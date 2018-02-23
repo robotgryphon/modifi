@@ -4,8 +4,10 @@ mono: none
 dotnet: 2.0.0
 
 install:
-- dotnet restore
+- dotnet restore modifi/Connectors
+- dotnet restore modifi/Storage
+- dotnet restore modifi/Core
 
 script:
 - dotnet build
-- dotnet test test/Modifi/Modifi.csproj
+- dotnet test test/Modifi
