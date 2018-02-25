@@ -48,7 +48,7 @@ namespace Modifi.Commands {
 
             foreach (string mod in mods) {
                 string domainName = ModHelper.GetDomainName(mod);
-                IDomain handler = Modifi.GetInstance().GetDomain(domainName);
+                IDomain handler = Modifi.DomainHandler.GetDomain(domainName);
 
                 if (handler == null || !(handler is IDomain)) {
                     Modifi.DefaultLogger.Error("No domain handler found for {0}. Aborting.", domainName);

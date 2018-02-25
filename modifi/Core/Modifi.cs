@@ -17,19 +17,19 @@ namespace Modifi {
 
         protected static Modifi INSTANCE;
 
-        protected Dictionary<string, IDomain> LoadedDomains;
-
-        public static IEnumerable<string> DomainSearchPaths {
-            get;
-            protected set;
-        }
-
         public static bool DEBUG_MODE = false;
 
         public static string DEFAULT_PACK_PATH = Path.Combine(Environment.CurrentDirectory, "pack.json");
         
+        protected DomainManager _DomainHandler;
+        
+        public static DomainManager DomainHandler {
+            get { return INSTANCE._DomainHandler; }
+            set { }
+        }
+
         protected Modifi() {
-            this.LoadedDomains = new Dictionary<string, IDomain>();
+            this._DomainHandler = new DomainManager("modifi-domains");
         }
 
         public static Modifi GetInstance() {
@@ -39,84 +39,15 @@ namespace Modifi {
 
             return INSTANCE;
         }
-        
-        /// <summary>
-        /// Loads a domain and adds it to a pack's loaded domain list.        /// </summary>
-        /// <param name="pack"></param>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        public IDomain LoadDomain(string domain) {
-
-            if (LoadedDomains.ContainsKey(domain)) return LoadedDomains[domain];
-
-            // Perform domain search
-            bool domainFound = false;
-            string domainPath = null;
-
-            if (Modifi.DomainSearchPaths == null)
-                Modifi.LoadSearchPaths();
-
-            foreach (string path in Modifi.DomainSearchPaths) {
-                string pathCheck = Path.Combine(path, domain + ".dll");
-
-                Modifi.DefaultLogger.Debug("Trying to load domain handler from {0}...", pathCheck);
-                if(File.Exists(pathCheck)) {
-                    domainPath = pathCheck;
-                    domainFound = true;
-                    break;
-                }
-            }
-
-            if (!domainFound)
-                throw new DllNotFoundException("Cannot find the domain DLL.");
-
-            Assembly cfAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(domainPath);
-            Type controller = cfAssembly.ExportedTypes.First(t => t.GetInterfaces().Contains(typeof(IDomain)));
-
-            if(controller == null) {
-                throw new Exception("Cannot find the domain handler inside domain assembly.");
-            }
-
-            try {
-                IDomain domainInstance = Activator.CreateInstance(controller) as IDomain;
-                LoadedDomains.Add(domain, domainInstance);
-                return domainInstance;
-            }
-
-            catch(Exception e) {
-                Modifi.DefaultLogger.Error("Error loading domain handler from {0}:", domainPath);
-                Modifi.DefaultLogger.Error(e.Message);
-                return null;
-            }
-            
-        }
-
-        public IDomain GetDomain(string id) {
-            if (LoadedDomains.ContainsKey(id)) return LoadedDomains[id];
-            try {
-
-                ConsoleColor old = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Modifi.DefaultLogger.Information("Domain {0:l} not loaded, loading it now.", id);
-                Console.ForegroundColor = old;
-
-                IDomain domain = LoadDomain(id);
-                return domain;
-            }
-
-            catch(Exception e) {
-                Modifi.DefaultLogger.Error(e.Message);
-                return null;
-            }
-        }
 
         public static void LoadSearchPaths() {
-            List<string> searchPaths = new List<string>();
             
+            DomainManager handler = INSTANCE._DomainHandler;
+
             // Automatically try to find stuff in the modifi directory, current directory, and app directory
-            searchPaths.Add(Path.Combine(Settings.ModifiDirectory, "domains"));
-            searchPaths.Add(Path.Combine(Environment.CurrentDirectory, "domains"));
-            searchPaths.Add(Path.Combine(Settings.AppDirectory, "domains"));
+            handler.AddPath(Path.Combine(Settings.ModifiDirectory, "domains"));
+            handler.AddPath(Path.Combine(Environment.CurrentDirectory, "domains"));
+            handler.AddPath(Path.Combine(Settings.AppDirectory, "domains"));
 
             // Load domains JSON file from the app directory if it exists
             if (File.Exists(Path.Combine(Settings.AppDirectory, "domains.json"))) {
@@ -129,13 +60,10 @@ namespace Modifi {
                     if (currentDirectoryRegex.IsMatch(path)) {
                         string pathPart = currentDirectoryRegex.Match(path2).Groups[1].Value;
                         path2 = Path.Combine(Environment.CurrentDirectory, pathPart);
+                        handler.AddPath(path2);
                     }
-
-                    if(Directory.Exists(path2)) searchPaths.Add(path2);
                 }
             }
-
-            DomainSearchPaths = searchPaths;
         }
 
         public static ILogger DefaultLogger = GenerateDefaultLogger();

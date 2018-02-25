@@ -89,7 +89,7 @@ namespace Modifi.Commands {
 
                     IDomain curseforge;
                     try {
-                        curseforge = Modifi.GetInstance().GetDomain("curseforge");
+                        curseforge = Modifi.DomainHandler.GetDomain("curseforge");
                     }
 
                     catch(DllNotFoundException) {
