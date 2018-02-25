@@ -2,24 +2,35 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Modifi.Storage;
+
+
+using Xunit;
 
 namespace Modifi.Tests {
     
-    [TestClass]
-    public class PackTests {
-        
-        public static string dataDirectory = Path.Combine(Environment.CurrentDirectory, "test_data");
+    public class PackTestFixture : IDisposable {
 
-        [ClassInitialize]
-        public static void Initialize(TestContext ctx) {
+        public string dataDirectory {
+            get { return Path.Combine(Environment.CurrentDirectory, "test_data"); }
+            set { }
+        }
+
+        public PackTestFixture() {
             Directory.CreateDirectory(dataDirectory);
         }
 
-        [ClassCleanup]
-        public static void Cleanup() {
+        public void Dispose() {
             Directory.Delete(dataDirectory, true);
+        }
+    }
+
+    public class PackTests : IClassFixture<PackTestFixture> {
+        
+        public string dataDirectory;
+
+        public PackTests(PackTestFixture fixture) {
+            this.dataDirectory = fixture.dataDirectory;
         }
 
         protected Pack CreatePack() {
@@ -33,15 +44,15 @@ namespace Modifi.Tests {
             return p;
         }
 
-        [TestMethod]
+        [Fact]
         public void TestInvalidPackLoad () {
             // Pack.json does not exist
-            Assert.ThrowsException<FileNotFoundException>(() => {
+            Assert.Throws<FileNotFoundException>(() => {
                 Pack.Load("pack.json");
             });
         }
 
-        [TestMethod]
+        [Fact]
         public async Task TestPackCreation() {
             string filename = Path.Combine(dataDirectory, "test-pack.json");
             
@@ -53,10 +64,10 @@ namespace Modifi.Tests {
             Debug.WriteLine("Saving to {0}...", filename);
             await p.SaveAs(filename);
 
-            Assert.IsTrue(File.Exists(filename));
+            Assert.True(File.Exists(filename));
         }
 
-        [TestMethod]
+        [Fact]
         public async Task TestPackRead() {
             Pack original = CreatePack();
 
@@ -65,31 +76,31 @@ namespace Modifi.Tests {
 
             Pack loaded = Pack.Load(file);
 
-            Assert.AreEqual(loaded.Name, original.Name);
-            Assert.AreEqual(loaded.MinecraftVersion, original.MinecraftVersion);
-            Assert.AreEqual(loaded.Mods.Count, original.Mods.Count);
+            Assert.Equal(loaded.Name, original.Name);
+            Assert.Equal(loaded.MinecraftVersion, original.MinecraftVersion);
+            Assert.Equal(loaded.Mods.Count, original.Mods.Count);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPackAdd() {
             Pack original = CreatePack();
             Pack test = CreatePack();
 
             original.AddMod("test:testmod", "latest");
 
-            Assert.AreNotEqual(original.Mods, test.Mods);
-            Assert.IsTrue(original.Mods.Count > test.Mods.Count);
+            Assert.NotEqual(original.Mods, test.Mods);
+            Assert.True(original.Mods.Count > test.Mods.Count);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPackRemove() {
             Pack original = CreatePack();
             Pack test = CreatePack();
 
             original.RemoveMod("curseforge:jei");
 
-            Assert.AreNotEqual(original.Mods, test.Mods);
-            Assert.IsTrue(original.Mods.Count < test.Mods.Count);
+            Assert.NotEqual(original.Mods, test.Mods);
+            Assert.True(original.Mods.Count < test.Mods.Count);
         }
     }
 }
