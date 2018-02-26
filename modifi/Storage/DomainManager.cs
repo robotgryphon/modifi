@@ -12,20 +12,10 @@ namespace Modifi.Domains {
     public class DomainManager {
 
         protected List<string> SearchPaths;
-        
-        protected AppDomain Domain;
 
         protected Dictionary<string, IDomain> LoadedDomains;
 
         public DomainManager(string name, bool addCurrentDirectory = false) {
-            try {
-                this.Domain = AppDomain.CreateDomain(name);
-            }
-
-            catch(PlatformNotSupportedException) {
-                this.Domain = AppDomain.CurrentDomain;
-            }
-
             this.SearchPaths = new List<string>();
             this.LoadedDomains = new Dictionary<string, IDomain>();
 
@@ -33,9 +23,9 @@ namespace Modifi.Domains {
         }
 
         public bool AddPath(string path) {
-            string realPath = Path.GetDirectoryName(path);
+            string realPath = new DirectoryInfo(path).FullName;
             if(!Directory.Exists(realPath)) 
-                throw new DirectoryNotFoundException();
+                return false;
 
             if(SearchPaths.Contains(realPath))
                 return false;
@@ -45,7 +35,7 @@ namespace Modifi.Domains {
         }
 
         public bool RemovePath(string path) {
-            string realPath = Path.GetDirectoryName(path);
+            string realPath =new DirectoryInfo(path).FullName;
             return SearchPaths.Remove(realPath);
         }
 
@@ -104,8 +94,7 @@ namespace Modifi.Domains {
             if (!domainFound)
                 return Task.FromResult<IDomain>(null);
 
-            AssemblyName aName = AssemblyLoadContext.GetAssemblyName(domainPath);
-            Assembly assemblyLoaded = Domain.Load(aName);
+            Assembly assemblyLoaded = Assembly.LoadFrom(domainPath);
             Type controller = assemblyLoaded.ExportedTypes.First(t => t.GetInterfaces().Contains(typeof(IDomain)));
 
             if(controller == null) {

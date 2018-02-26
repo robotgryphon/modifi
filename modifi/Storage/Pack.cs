@@ -46,8 +46,11 @@ namespace Modifi.Storage {
         }
 
         public static Pack Load(string path) {
-            if (!File.Exists(path))
-                throw new FileNotFoundException("Pack file does not exist. Cannot load.");
+            if (!File.Exists(path)) {
+                path = Path.Combine(Environment.CurrentDirectory, path + ".json");
+                if(!File.Exists(path))
+                    throw new FileNotFoundException("Pack file does not exist. Cannot load.");
+            }
 
             Pack p = new Pack();
             p.Filename = path;
@@ -115,5 +118,48 @@ namespace Modifi.Storage {
             }
         }
 
+        public ModStatus GetModStatus(string modString) {
+            if(Files.ContainsKey(modString))
+                return ModStatus.Installed;
+
+            if(Mods.ContainsKey(modString))
+                return ModStatus.Requested;
+
+            // TODO: ModStatus.Disabled
+            return ModStatus.NotInstalled;
+        }
+
+        public ModStatus GetModStatus(IDomain domain, ModMetadata metadata) {
+            string domainName = domain.GetDomainIdentifier();
+            return GetModStatus(domainName + ":" + metadata.GetModIdentifier());
+        }
+
+        public ModDownloadDetails GetDownloadDetails(string modString) {
+            if(GetModStatus(modString) != ModStatus.Installed)
+                throw new Exception("Mod is not installed, cannot get download information.");
+
+            string downloadEncrypted = Files[modString];
+            return ModDownloadDetails.Decrypt(downloadEncrypted);
+        }
+
+        public IEnumerable<string> GetRequestedMods() {
+            return Mods.Keys;
+        }
+
+        public string GetRequestedVersion(string modString) {
+            if(!Mods.ContainsKey(modString)) {
+                throw new Exception("Mod not requested.");
+            }
+
+            return Mods[modString];
+        }
+
+        public IEnumerable<string> GetInstalledMods() {
+            return Files.Keys;
+        }
+
+        public void MarkInstalled(string modString, ModDownloadDetails download) {
+            this.Files.Add(modString, download.Encrypt());
+        }
     }
 }

@@ -116,43 +116,51 @@ namespace Domains.Curseforge {
 
             #region Perform Mod Download
             try {
-                HttpWebRequest webRequest = WebRequest.CreateHttp(new Uri(versionInfo.DownloadURL + "/file"));
-                using (WebResponse r = await webRequest.GetResponseAsync()) {
-                    Uri downloadUri = r.ResponseUri;
+                Uri uri = new Uri(versionInfo.DownloadURL + "/file");
+                HttpWebRequest req = WebRequest.CreateHttp(uri);
+                req.Method = "GET";
+                req.AllowAutoRedirect = true;
+                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64)";
 
-                    if (!FILENAME_MATCH.IsMatch(downloadUri.AbsoluteUri))
-                        throw new ModDownloadException("The provided download URL does not appear to be valid.");
+                HttpWebResponse r = (HttpWebResponse) await req.GetResponseAsync();
+                Uri downloadUri = r.ResponseUri;
 
-                    Match m = FILENAME_MATCH.Match(downloadUri.AbsoluteUri);
-                    string filename = m.Groups[1].Value;
+                if (!FILENAME_MATCH.IsMatch(downloadUri.AbsoluteUri))
+                    throw new ModDownloadException("The provided download URL does not appear to be valid.");
 
-                    if (filename.ToLowerInvariant() == "download")
-                        throw new ModDownloadException("Bad filename for a mod from Curseforge; got 'download' instead of filename.");
+                Match m = FILENAME_MATCH.Match(downloadUri.AbsoluteUri);
+                string filename = m.Groups[1].Value;
 
-                    string finalFilename = Path.Combine(directory, filename);
+                if (filename.ToLowerInvariant() == "download")
+                    throw new ModDownloadException("Bad filename for a mod from Curseforge; got 'download' instead of filename.");
 
-                    if (File.Exists(finalFilename)) File.Delete(finalFilename);
+                string finalFilename = Path.Combine(directory, filename);
 
-                    FileStream fs = File.OpenWrite(finalFilename);
-                    byte[] buffer = new byte[1024];
-                    using (Stream s = r.GetResponseStream()) {
-                        int size = s.Read(buffer, 0, buffer.Length);
-                        while (size > 0) {
-                            fs.Write(buffer, 0, size);
-                            size = s.Read(buffer, 0, buffer.Length);
-                        }
+                if (File.Exists(finalFilename)) File.Delete(finalFilename);
 
-                        fs.Flush();
-                        fs.Close();
-
-
-                        ModDownloadDetails result = new ModDownloadDetails();
-                        result.Filename = filename;
-                        result.Checksum = ModUtilities.GetFileChecksum(finalFilename);
-
-                        return result;
+                FileStream fs = File.OpenWrite(finalFilename);
+                byte[] buffer = new byte[1024];
+                using (Stream s = r.GetResponseStream()) {
+                    int size = s.Read(buffer, 0, buffer.Length);
+                    while (size > 0) {
+                        fs.Write(buffer, 0, size);
+                        size = s.Read(buffer, 0, buffer.Length);
                     }
+
+                    fs.Flush();
+                    fs.Close();
+
+
+                    ModDownloadDetails result = new ModDownloadDetails();
+                    result.Filename = filename;
+                    result.Checksum = ModUtilities.GetFileChecksum(finalFilename);
+
+                    return result;
                 }
+            }
+
+            catch(WebException e) {
+                throw new ModDownloadException(e.Message);
             }
 
             catch (Exception) {

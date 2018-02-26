@@ -24,12 +24,13 @@ namespace Modifi {
         protected DomainManager _DomainHandler;
         
         public static DomainManager DomainHandler {
-            get { return INSTANCE._DomainHandler; }
+            get { return GetInstance()._DomainHandler; }
             set { }
         }
 
         protected Modifi() {
             this._DomainHandler = new DomainManager("modifi-domains");
+            LoadSearchPaths();
         }
 
         public static Modifi GetInstance() {
@@ -40,9 +41,9 @@ namespace Modifi {
             return INSTANCE;
         }
 
-        public static void LoadSearchPaths() {
+        public void LoadSearchPaths() {
             
-            DomainManager handler = INSTANCE._DomainHandler;
+            DomainManager handler = _DomainHandler;
 
             // Automatically try to find stuff in the modifi directory, current directory, and app directory
             handler.AddPath(Path.Combine(Settings.ModifiDirectory, "domains"));
@@ -90,10 +91,6 @@ namespace Modifi {
                 .CreateLogger();
 
             return log;
-        }
-
-        internal static void ExecuteArguments(string[] input) {
-            Commands.CommandHandler.ExecuteArguments(input);
         }
     }
 }

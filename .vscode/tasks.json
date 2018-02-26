@@ -9,11 +9,13 @@
                 "build",
                 "${workspaceFolder}/modifi/Core/Modifi.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": "build",
         },
 
         {
-            "label": "buildcf",
+            "group": "build",
+            "label": "build:curseforge",
             "command": "dotnet",
             "type": "process",
             "args": [
