@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 namespace Modifi.Mods {
-    public abstract class ModUtilities {
+    public class ModUtilities {
 
         public static string GetFileChecksum(string filePath) {
             if (!File.Exists(filePath))

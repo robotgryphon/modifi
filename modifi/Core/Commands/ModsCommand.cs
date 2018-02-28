@@ -9,6 +9,7 @@ using CommandDotNet.Attributes;
 using Modifi.Domains;
 using Modifi.Mods;
 using Modifi.Storage;
+using Modifi.Utilities;
 using Serilog;
 
 namespace Modifi.Commands {
@@ -20,9 +21,6 @@ namespace Modifi.Commands {
             get;
             set;
         }
-
-        [Option(ShortName = "p", LongName = "pack")]
-        public string packName { get; set; } = "pack";
     }
 
     [ApplicationMetadata(Name = "mods", Description = "Manages mods in the pack.")]
@@ -34,17 +32,14 @@ namespace Modifi.Commands {
         /// <param name="domain">Domain handler to use for lookup.</param>
         /// <param name="modIdentifier">Mod to lookup versions for.</param>
         [ApplicationMetadata(Description = "Gets the latest versions of a mod.")]
-        public void Versions(
-            List<string> modStrings, 
-            [Option(Description = "Minecraft version to pull information for.", LongName = "mc-version", ShortName = "m")] string mcversion = "1.12.2", 
-            [Option(ShortName = "c", LongName = "count")] int num = 5) {
+        public void Versions(GlobalArguments globalArguments, ModArguments modArguments, [Option(ShortName = "c", LongName = "count")] int num = 5) {
 
-            if (modStrings == null || modStrings.Count == 0) {
+            if (modArguments.modStrings == null || modArguments.modStrings.Count == 0) {
                 Modifi.DefaultLogger.Error("Nothing to do; no mods were defined. Missing an argument?");
                 return;
             }
 
-            foreach (string modString in modStrings) {
+            foreach (string modString in modArguments.modStrings) {
                 string domainName = ModHelper.GetDomainName(modString);
                 string modIdentifier = ModHelper.GetModIdentifier(modString);
                 string modVersion = ModHelper.GetModVersion(modString);
@@ -55,7 +50,7 @@ namespace Modifi.Commands {
                 if (domain == null) return;
                 IDomainHandler handler = domain.GetDomainHandler();
 
-                ModMetadata meta = handler.GetModMetadata(mcversion, modIdentifier).Result;
+                ModMetadata meta = handler.GetModMetadata(globalArguments.MinecraftVersion, modIdentifier).Result;
 
                 IEnumerable<ModVersion> latestVersions = handler.GetRecentVersions(meta, num).Result;
 
@@ -83,14 +78,14 @@ namespace Modifi.Commands {
         }
 
         [ApplicationMetadata(Description = "Adds mods to the modpack.")]
-        public void Add(ModArguments arguments) {
+        public void Add(GlobalArguments globalArguments, ModArguments arguments) {
 
             if (arguments.modStrings == null || arguments.modStrings.Count == 0) {
                 Modifi.DefaultLogger.Error("Nothing to do; no mods were defined. Missing an argument?");
                 return;
             }
 
-            Storage.Pack pack = Storage.Pack.Load(arguments.packName);
+            Storage.Pack pack = Storage.Pack.Load(globalArguments.packName);
             foreach (string modString in arguments.modStrings) {
                 string domainName = ModHelper.GetDomainName(modString);
                 string modIdentifier = ModHelper.GetModIdentifier(modString);
@@ -127,35 +122,7 @@ namespace Modifi.Commands {
                 // ============================================================
                 // TODO: ModHelper.PrintModInformation(meta);
 
-                Menu<ModVersion> menu = new Menu<ModVersion>();
-
-                menu.OptionFormatter = (opt)=> {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write(opt.GetVersionName());
-                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                    Console.Write(" [");
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write(opt.GetModVersion());
-                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                    Console.Write("]");
-
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.Write(" [{0}]", opt.GetReleaseType());
-                    Console.WriteLine();
-                };
-
-                ModVersion latestRelease = handler.GetRecentVersions(meta, 1, ModReleaseType.Release).Result.First();
-                ModVersion latestVersion = handler.GetRecentVersions(meta, 1, ModReleaseType.Any).Result.First();
-
-                IEnumerable<ModVersion> versions = handler.GetRecentVersions(meta, 6, ModReleaseType.Any).Result.Skip(1);
-
-                menu.AddItem(latestRelease);
-                if (latestVersion.GetModVersion()!= latestRelease.GetModVersion())
-                    menu.AddItem(latestVersion);
-
-                menu.AddSpacer();
-                foreach (ModVersion v in versions.Take(5))menu.AddItem(v);
-
+                Menu<ModVersion> menu = MenuUtilities.CreateModVersionMenu(handler, meta);
                 menu.DrawMenu();
 
                 Console.ResetColor();
@@ -173,14 +140,14 @@ namespace Modifi.Commands {
         }
         
         [ApplicationMetadata(Description = "Removes mods from the modpack.")]
-        public void Remove(ModArguments arguments) {
+        public void Remove(GlobalArguments globalArguments, ModArguments arguments) {
 
             if (arguments.modStrings == null || arguments.modStrings.Count == 0) {
                 Modifi.DefaultLogger.Error("Nothing to do; no mods were defined. Missing an argument?");
                 return;
             }
 
-            Storage.Pack pack = Storage.Pack.Load(arguments.packName);
+            Storage.Pack pack = Storage.Pack.Load(globalArguments.packName);
             foreach (string modString in arguments.modStrings) {
                 string domainName = ModHelper.GetDomainName(modString);
                 string modIdentifier = ModHelper.GetModIdentifier(modString);
@@ -242,17 +209,14 @@ namespace Modifi.Commands {
         }
 
         [ApplicationMetadata(Description = "Fetches information on mods.")]
-        public void Info(
-            List<string> modStrings,
-            [Option(ShortName = "m", LongName = "mc-version", Description = "Minecraft version to pull information for.")]
-            string mcversion = "1.12.2") {
+        public void Info(GlobalArguments globalArguments, ModArguments modArguments) {
 
-            if (modStrings == null || modStrings.Count == 0) {
+            if (modArguments.modStrings == null || modArguments.modStrings.Count == 0) {
                 Modifi.DefaultLogger.Error("Nothing to do; no mods were defined. Missing an argument?");
                 return;
             }
 
-            foreach (string modString in modStrings) {
+            foreach (string modString in modArguments.modStrings) {
                 string domainName = ModHelper.GetDomainName(modString);
                 string modIdentifier = ModHelper.GetModIdentifier(modString);
                 string modVersion = ModHelper.GetModVersion(modString);
@@ -265,7 +229,7 @@ namespace Modifi.Commands {
 
                 ILogger log = Modifi.DefaultLogger;
 
-                Task<ModMetadata> meta = handler.GetModMetadata(mcversion, modIdentifier);
+                Task<ModMetadata> meta = handler.GetModMetadata(globalArguments.MinecraftVersion, modIdentifier);
                 if(meta.IsCompletedSuccessfully) {
                     ModMetadata metadata = meta.Result;
                     log.Information(metadata.GetName());
@@ -276,17 +240,14 @@ namespace Modifi.Commands {
         }
 
         [ApplicationMetadata(Description = "Downloads mods directly to the mod directory, without adding them to the pack.")]
-        public Task Download(
-            List<string> modStrings,
-            [Option(ShortName = "m", LongName = "mc-version", Description = "Minecraft version to pull information for.")]
-            string mcversion = "1.12.2") {
+        public async Task Download(GlobalArguments globalArguments, ModArguments modArguments) {
 
-            if (modStrings == null || modStrings.Count == 0) {
+            if (modArguments.modStrings == null || modArguments.modStrings.Count == 0) {
                 Modifi.DefaultLogger.Error("Nothing to do; no mods were defined. Missing an argument?");
-                return Task.CompletedTask;
+                return;
             }
 
-            foreach (string modString in modStrings) {
+            foreach (string modString in modArguments.modStrings) {
                 string domainName = ModHelper.GetDomainName(modString);
                 string modIdentifier = ModHelper.GetModIdentifier(modString);
                 string modVersion = ModHelper.GetModVersion(modString);
@@ -294,21 +255,31 @@ namespace Modifi.Commands {
                 IDomain domain = Modifi.DomainHandler.GetDomain(domainName);
 
                 // TODO: Show error here?
-                if (domain == null)return Task.CompletedTask;
+                if (domain == null) return;
                 IDomainHandler handler = domain.GetDomainHandler();
 
-                // Fetch the mod version information from the domain API
                 try {
-                    ModMetadata meta = handler.GetModMetadata(mcversion, modIdentifier).Result;
-                    ModVersion mod = handler.GetModVersion(meta, modVersion).Result;
+                    ModMetadata meta = handler.GetModMetadata(globalArguments.MinecraftVersion, modIdentifier).Result;
+                    ModVersion mod;
+                    if(String.IsNullOrEmpty(modVersion)) {
+                        Menu<ModVersion> versionsMenu = MenuUtilities.CreateModVersionMenu(handler, meta);
+                        versionsMenu.DrawMenu();
 
-                    handler.DownloadMod(mod, Settings.ModPath);
-                } catch (Exception e) { 
-                    return Task.FromException(e); 
+                        mod = versionsMenu.SelectedOption;
+                    } else {
+                        // Mod version was already specified
+                        // Fetch the mod version information from the domain API
+                        mod = handler.GetModVersion(meta, modVersion).Result;
+                    }
+
+                    Modifi.DefaultLogger.Information("Downloading {0}, version {1}...", meta.GetName(), mod.GetModVersion());
+                    Modifi.DefaultLogger.Information("Version Name: {0}", mod.GetVersionName());
+
+                    await handler.DownloadMod(mod, Settings.ModPath);
+                } catch (Exception) { 
+                    throw;
                 }
             }
-
-            return Task.CompletedTask;
         }
     }
 }
