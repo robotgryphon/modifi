@@ -32,7 +32,7 @@ namespace Modifi.Mods {
         public static string GetModVersion(string mod) {
             Match m = SplitModString(mod);
             if(m.Groups["version"].Length > 0)
-                return m.Groups["modid"].Value;
+                return m.Groups["version"].Value;
             return null;
         }
     }
