@@ -103,19 +103,26 @@ namespace Modifi.Storage {
             }
         }
 
-        public void AddMod(string modString, string version) {
+        public bool AddMod(string modString, string version) {
+            if(this.Mods.ContainsKey(modString.ToLower()))
+                return false;
+
             this.Mods.Add(modString, version);
+            return true;
         }
 
-        public void AddMod(IDomain domain, ModMetadata mod, ModVersion version) {
+        public bool AddMod(IDomain domain, ModMetadata mod, ModVersion version) {
             string modString = String.Format("{0}:{1}", domain.GetDomainIdentifier(), mod.GetModIdentifier());
-            this.Mods.Add(modString, version.GetModVersion());
+            return AddMod(modString, version.GetModVersion());
         }
 
-        public void RemoveMod(string modString) {
+        public bool RemoveMod(string modString) {
             if (this.Mods.ContainsKey(modString)) {
                 this.Mods.Remove(modString);
+                return true;
             }
+
+            return false;
         }
 
         public ModStatus GetModStatus(string modString) {

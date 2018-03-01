@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Modifi.Mods;
 using Modifi.Storage;
 
 
@@ -38,7 +39,7 @@ namespace Modifi.Tests {
             p.Name ="Pack";
             p.MinecraftVersion = "1.12.2";
             p.Mods = new System.Collections.Generic.Dictionary<string, string>() {
-                { "curseforge:jei", "latest" }
+                { "test:test-mod", "1.0.0" }
             };
 
             return p;
@@ -84,23 +85,49 @@ namespace Modifi.Tests {
         [Fact]
         public void TestPackAdd() {
             Pack original = CreatePack();
-            Pack test = CreatePack();
 
-            original.AddMod("test:testmod", "latest");
+            // Should not be able to add the mod: it already exists
+            bool added = original.AddMod("test:test-mod", "1.0.0");
+            Assert.False(added);
 
-            Assert.NotEqual(original.Mods, test.Mods);
-            Assert.True(original.Mods.Count > test.Mods.Count);
+            // However, a new mod should return true
+            bool addedNew = original.AddMod("test:new-mod", "1.0.0");
+            Assert.True(addedNew);
         }
 
         [Fact]
         public void TestPackRemove() {
             Pack original = CreatePack();
-            Pack test = CreatePack();
 
-            original.RemoveMod("curseforge:jei");
+            // Should be able to remove one
+            bool removed = original.RemoveMod("test:test-mod");
+            Assert.True(removed);
 
-            Assert.NotEqual(original.Mods, test.Mods);
-            Assert.True(original.Mods.Count < test.Mods.Count);
+            // Cannot remove a mod twice
+            bool removedTwice = original.RemoveMod("test:test-mod");
+            Assert.False(removedTwice);
+
+            // Cannot remove a mod that does not exist in the pack
+            bool removeNonexistent = original.RemoveMod("test:non-existant");
+            Assert.False(removeNonexistent);
+        }
+
+        [Fact]
+        public void TestPackDownload() { }
+
+        [Fact]
+        public void TestPackModStatus() {
+            Pack original = CreatePack();
+
+            // Test mod that hasn't been added to the pack
+            Assert.Equal(ModStatus.NotInstalled, original.GetModStatus("test:not-valid"));
+
+            // Added to the pack, but not downloaded
+            Assert.Equal(ModStatus.Requested, original.GetModStatus("test:test-mod"));
+
+            // TODO: Pack Download
+            
+            // TODO: Test for "downloaded" mod
         }
     }
 }
