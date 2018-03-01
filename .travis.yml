@@ -8,7 +8,7 @@ script:
   - dotnet test test/Modifi
 
 before_deploy:
-  - dotnet publish -c Release
+  - dotnet publish modifi/Launcher -c Release
 
 deploy:
   provider: releases
