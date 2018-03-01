@@ -4,8 +4,11 @@ mono: none
 dotnet: 2.0.0
 
 script:
-- dotnet build modifi/Launcher
-- dotnet test test/Modifi
+  - dotnet build modifi/Launcher
+  - dotnet test test/Modifi
+
+before_deploy:
+  - dotnet publish -c Release
 
 deploy:
   provider: releases
