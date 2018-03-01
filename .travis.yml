@@ -8,13 +8,13 @@ script:
   - dotnet test test/Modifi
 
 before_deploy:
-  - dotnet publish modifi/Launcher -c Release
+  - dotnet publish modifi/Launcher -o ./Publish -c Release
 
 deploy:
   provider: releases
   api_key: $RELEASES_API_KEY
   file_glob: true
-  file: publish/*
+  file: ./modifi/Launcher/Publish/*
   skip_cleanup: true
   on:
     tags: true
