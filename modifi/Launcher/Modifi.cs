@@ -46,13 +46,12 @@ namespace Modifi {
             DomainManager handler = _DomainHandler;
 
             // Automatically try to find stuff in the modifi directory, current directory, and app directory
-            handler.AddPath(Path.Combine(Settings.ModifiDirectory, "domains"));
             handler.AddPath(Path.Combine(Environment.CurrentDirectory, "domains"));
             handler.AddPath(Path.Combine(Settings.AppDirectory, "domains"));
 
             // Load domains JSON file from the app directory if it exists
             if (File.Exists(Path.Combine(Settings.AppDirectory, "domains.json"))) {
-                string domainsJSON = File.ReadAllText(Path.Combine(Settings.ModifiDirectory, "domains.json"));
+                string domainsJSON = File.ReadAllText(Path.Combine(Settings.AppDirectory, "domains.json"));
                 IEnumerable<string> paths = JsonConvert.DeserializeObject<IEnumerable<string>>(domainsJSON);
 
                 Regex currentDirectoryRegex = new Regex(@"{dir}\\?\/?(.*)");

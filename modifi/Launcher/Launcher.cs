@@ -20,12 +20,12 @@ namespace Modifi {
             string[] input = args;
             
             Modifi.DEBUG_MODE = true;
-            if(Modifi.DEBUG_MODE) input = new string[] { "pack", "download" };
+            if(Modifi.DEBUG_MODE) input = new string[] { "mods", "download", "curseforge:jei", "--debug-mode" };
 
             AppRunner<Commands.Base> r = new AppRunner<Commands.Base>(new CommandDotNet.Models.AppSettings() {
                 Case = CommandDotNet.Models.Case.KebabCase
             });            
-            
+
             return r.Run(input);
         }
     }

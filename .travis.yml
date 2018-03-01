@@ -3,11 +3,15 @@ dist: trusty
 mono: none
 dotnet: 2.0.0
 
-install:
-- dotnet restore modifi/Connectors
-- dotnet restore modifi/Storage
-- dotnet restore modifi/Core
-
 script:
-- dotnet build modifi/Core
+- dotnet build modifi/Launcher
 - dotnet test test/Modifi
+
+deploy:
+  provider: releases
+  api_key: $RELEASES_API_KEY
+  file_glob: true
+  file: publish/*
+  skip_cleanup: true
+  on:
+    tags: true
